@@ -8,9 +8,6 @@ export const initialState = {
   };
   
   const reducer = (state, action) => {
-    console.log("state and action follow: ");
-    console.log(state);
-    console.log(action);
   
     switch (action.type) {
       case "SET_USER":
