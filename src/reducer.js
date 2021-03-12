@@ -1,6 +1,6 @@
 export const initialState = {
     user: null,
-    // REMOVE after development
+    expiry:null,
     token: null,
     playlists: [],
     playing: false,
@@ -19,6 +19,7 @@ export const initialState = {
         return {
           ...state,
           token: action.token,
+          expiry: action.expiry,
         };
       case "SET_PLAYLISTS":
         return {
@@ -30,6 +31,10 @@ export const initialState = {
           ...state,
           discover_weekly: action.discover_weekly,
         };
+      case "SET_EMPTY":
+      return {
+        initialState,
+      };
       default:
         return state;
     }

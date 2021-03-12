@@ -8,6 +8,12 @@ const scopes = [
   "user-read-playback-state",
   "user-top-read",
   "user-modify-playback-state",
+  "user-library-modify",
+  "user-library-read",
+  "user-read-email",
+  "user-read-private",
+  
+
 ];
 
 export const getTokenFromUrl = () => {
@@ -16,6 +22,7 @@ export const getTokenFromUrl = () => {
       .split("&")
       .reduce((initial, item) => {
         let parts = item.split("=");
+        console.log("parts",parts);
         initial[parts[0]] = decodeURIComponent(parts[1]);
         return initial;
       }, {});
