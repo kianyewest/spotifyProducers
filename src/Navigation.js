@@ -10,6 +10,7 @@ const Navigation = () => {
       <IndexLinkContainer to="/"><Nav.Link>Home</Nav.Link></IndexLinkContainer>
       <IndexLinkContainer to="/about"><Nav.Link>About</Nav.Link></IndexLinkContainer>
       <IndexLinkContainer to="/albums"><Nav.Link>Albums</Nav.Link></IndexLinkContainer>
+      <IndexLinkContainer to="/search"><Nav.Link>Search</Nav.Link></IndexLinkContainer>
       
 
 

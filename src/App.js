@@ -13,6 +13,8 @@ import Navigation from "./Navigation"
 import { getTokenFromUrl } from "./spotify";
 import SpotifyWebApi from "spotify-web-api-js";
 import { useDataLayerValue } from "./DataLayer";
+import Search from './Search';
+import View from './View';
 
 const spotify = new SpotifyWebApi();
 
@@ -25,6 +27,7 @@ const isLoggedIn = () =>{
 }
 
 function App() {
+  console.log("APP CALLED")
   const [state, dispatch] = useDataLayerValue();
 
   const Logout = () => {
@@ -34,74 +37,65 @@ function App() {
   }
 
   useEffect(() => {
+
     const storage = localStorage.getItem("user");
     var {_token,_expiry} =  storage ? JSON.parse(storage):{undefined,undefined};
+   
 
-    
-    if (_token && _expiry<(Date.now()/1000)) {
+    //check token expired
+    if(_expiry<(Date.now()/1000)){
+      localStorage.clear();
+      dispatch({type:"SET_EMPTY"});
+      _token = undefined;
+      _expiry = undefined
+    }
+
+    if (_token) {
       console.log("ALREADY LOGGED IN!");
     }else{
-      // console.log("attempt to login",      window.location.hash);
-
       const hash = getTokenFromUrl();
       window.location.hash = "";
       if(hash.access_token){
         _token = hash.access_token;
         _expiry = (Date.now()/1000)+hash.expires_in;
-        // console.log("_expiry",_expiry);
+        const saveVal = JSON.stringify({_token,_expiry});
+        localStorage.setItem('user',saveVal );
+        dispatch({
+          type: "SET_TOKEN",
+          token: _token,
+          expiry:_expiry,
+        });
+        
+        spotify.setAccessToken(_token);
       }
-    }
-    if (_token) {
-      const saveVal = JSON.stringify({_token,_expiry});
-      // console.log("saving: ",saveVal);
-      localStorage.setItem('user',saveVal );
-      dispatch({
-        type: "SET_TOKEN",
-        token: _token,
-        expiry:_expiry,
-      });
       
-      spotify.setAccessToken(_token);
-
-      // spotify.getMe().then((user) => {
-      //   dispatch({
-      //     type: "SET_USER",
-      //     user,
-      //   });
-      // });
-      // spotify.getUserPlaylists().then((playlists) => {
-      //   dispatch({
-      //     type: "SET_PLAYLISTS",
-      //     playlists,
-      //   });
-      // });
-      // spotify.getPlaylist("37i9dQZF1E34Ucml4HHx1w").then((playlist) => {
-      //   dispatch({
-      //     type: "SET_DISCOVER_WEEKLY",
-      //     discover_weekly: playlist,
-      //   });
-      // });
-      // console.log("at botto")
-      //  localStorage.clear();
-      //  dispatch({type:"SET_EMPTY"});
     }
     
   }, []);
-  
 
   return(
+    
     <Router>
-      <Navigation/>
+      {console.log("in it: ",state)}
+     {state.token && <Navigation/> }
       <Switch>
+      
       <Route exact path="/">
-        <div className="app">{state.token ? <><Home spotify={spotify} /> </>: <Login />}</div>;
+        <div className="app">{state.token ? <Home spotify={spotify} /> : <Login />}</div>;
       </Route>
       <Route exact path="/about" >
-        <About />
+        {state.token ? <About /> : <Login />}
       </Route>
       <Route exact path="/albums" onEnter={isLoggedIn}>
-        <Albums spotify={spotify} />
+        {state.token ? <Albums loginToken={state.token} spotify={spotify} /> : <Login />}
       </Route>
+      <Route exact path="/search" onEnter={isLoggedIn}>
+        {state.token ? <Search loginToken={state.token} spotify={spotify} /> : <Login />}
+      </Route>
+      <Route path="/view/:id" onEnter={isLoggedIn}>
+        {state.token ? <View loginToken={state.token} spotify={spotify} /> : <Login />}
+      </Route>
+
 
     </Switch>
     </Router>
