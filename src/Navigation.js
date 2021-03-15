@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Navbar, Nav, Container,NavDropdown,Form,FormControl,Button } from 'react-bootstrap';
 import {IndexLinkContainer} from 'react-router-bootstrap'
-const Navigation = () => {
+const Navigation = ({Logout}) => {
   return (
     <Navbar bg="dark" variant="dark">
     <Navbar.Brand href="#home">Navbar</Navbar.Brand>
@@ -13,7 +13,7 @@ const Navigation = () => {
       <IndexLinkContainer to="/search"><Nav.Link>Search</Nav.Link></IndexLinkContainer>
       
 
-
+      <Button onClick={()=>Logout()}>Partial Logout</Button>
     </Nav>
     <Form inline>
       <FormControl type="text" placeholder="Search" className="mr-sm-2" />

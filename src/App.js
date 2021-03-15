@@ -32,56 +32,58 @@ function App() {
 
   const Logout = () => {
     localStorage.clear();
-    const [state, dispatch] = useDataLayerValue();
-    dispatch({type:"SET_EMPTY"});
   }
+  
 
-  useEffect(() => {
-
-    const storage = localStorage.getItem("user");
-    var {_token,_expiry} =  storage ? JSON.parse(storage):{undefined,undefined};
-   
-
-    //check token expired
-    if(_expiry<(Date.now()/1000)){
-      localStorage.clear();
-      dispatch({type:"SET_EMPTY"});
-      _token = undefined;
-      _expiry = undefined
-    }
-
-    if (_token) {
-      console.log("ALREADY LOGGED IN!");
-    }else{
-      const hash = getTokenFromUrl();
-      window.location.hash = "";
-      if(hash.access_token){
-        _token = hash.access_token;
-        _expiry = (Date.now()/1000)+hash.expires_in;
-        const saveVal = JSON.stringify({_token,_expiry});
-        localStorage.setItem('user',saveVal );
-        dispatch({
-          type: "SET_TOKEN",
-          token: _token,
-          expiry:_expiry,
-        });
-        
-        spotify.setAccessToken(_token);
-      }
+  const storage = localStorage.getItem("user");
+  var {_token,_expiry} =  storage ? JSON.parse(storage):{undefined,undefined};
+  
+  if(_expiry<(Date.now()/1000)){
+    localStorage.clear();
+    dispatch({type:"SET_EMPTY"});
+    _token = undefined;
+    _expiry = undefined
+  }
+  useEffect(()=>{
+  if (_token) {
+    console.log("ALREADY LOGGED IN!");
+    dispatch({
+      type: "SET_TOKEN",
+      token: _token,
+      expiry:_expiry,
+    });
+    spotify.setAccessToken(_token);
+  }else{
+    console.log("was not logged in")
+    const hash = getTokenFromUrl();
+    window.location.hash = "";
+    if(hash.access_token){
+      _token = hash.access_token;
+      _expiry = (Date.now()/1000)+parseInt(hash.expires_in);
       
+      const saveVal = JSON.stringify({_token,_expiry});
+      localStorage.setItem('user',saveVal );
+      dispatch({
+        type: "SET_TOKEN",
+        token: _token,
+        expiry:_expiry,
+      });
+      
+      spotify.setAccessToken(_token);
     }
-    
-  }, []);
+  }
+  },[]);
+  
 
   return(
     
     <Router>
-      {console.log("in it: ",state)}
-     {state.token && <Navigation/> }
+     {state.token && <Navigation Logout={Logout}/> }
+     {state.token ?
       <Switch>
       
-      <Route exact path="/">
-        <div className="app">{state.token ? <Home spotify={spotify} /> : <Login />}</div>;
+      <Route exact path="/"> <About />
+      <div className="app">{state.token ? <Home spotify={spotify} /> : <Login />}</div>;
       </Route>
       <Route exact path="/about" >
         {state.token ? <About /> : <Login />}
@@ -97,7 +99,7 @@ function App() {
       </Route>
 
 
-    </Switch>
+    </Switch>:<Login />}
     </Router>
  ) 
 }

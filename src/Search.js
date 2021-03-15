@@ -41,8 +41,7 @@ function Search({spotify}) {
     </Link>
     }
 
-    const onChangeHandler = (e) => {setSearchQuery(e.target.value); if(e.target.value===''){setResults(emptyState);}else{ doSearch();}}
-    
+
     return (
             <div>
               
