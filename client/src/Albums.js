@@ -1,8 +1,9 @@
 import React from 'react'
-import { SpotifyWebApi } from 'spotify-web-api-js';
 import { useEffect,useState } from 'react';
 import { useDataLayerValue } from "./DataLayer";
+import {  Spinner} from 'react-bootstrap';
 import InfiniteScroll from "react-infinite-scroll-component";
+import { Link } from 'react-router-dom';
 
 function Albums({spotify}) {
   console.log("Albums")
@@ -54,7 +55,7 @@ function Albums({spotify}) {
           dataLength={albums.length}
           next={fetchMoreData}
           hasMore={isMore}
-          loader={<h4>Loading...</h4>}
+          loader={<h4>Loading..</h4>}
           endMessage={
             <p style={{ textAlign: 'center' }}>
               <b>Yay! You have seen it all</b>
@@ -73,7 +74,7 @@ function Albums({spotify}) {
                         <div className="card-body">
                         <div className="d-flex justify-content-between align-items-center">
                             <div className="btn-group">
-                            <button type="button" className="btn btn-sm btn-outline-secondary">View</button>
+                            <Link to={{  pathname: '/view/'+album.album.id }}><button type="button" className="btn btn-sm btn-outline-secondary">View</button></Link>
                             <button type="button" className="btn btn-sm btn-outline-secondary">Edit</button>
                             </div>
                             <small className="text-muted">9 mins</small>

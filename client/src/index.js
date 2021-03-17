@@ -6,12 +6,14 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import {DataLayer} from "./DataLayer"
 import reducer, {initialState} from "./reducer"
+
 ReactDOM.render(
   <React.StrictMode>
     {/* This is our context, we pass it the initial state and reducer */}
     <DataLayer initialState={initialState} reducer={reducer}>
     
       <App />
+      
     </DataLayer>
   </React.StrictMode>,
   document.getElementById('root')
