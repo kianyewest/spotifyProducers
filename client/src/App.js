@@ -72,6 +72,8 @@ function App() {
       spotify.setAccessToken(_token);
     }
   }
+  
+
   },[]);
   
 
@@ -97,7 +99,9 @@ function App() {
       <Route path="/view/:id" onEnter={isLoggedIn}>
         {state.token ? <View loginToken={state.token} spotify={spotify} /> : <Login />}
       </Route>
-
+      <Route path="/" >
+        <h1>This is not a url :(</h1>
+      </Route>
 
     </Switch>:<Login />}
     </Router>
