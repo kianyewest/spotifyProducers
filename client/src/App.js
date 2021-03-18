@@ -15,6 +15,9 @@ import SpotifyWebApi from "spotify-web-api-js";
 import { useDataLayerValue } from "./DataLayer";
 import Search from './Search';
 import View from './View';
+import ViewTrack from "./ViewComponents/ViewTrack";
+import ViewArtist from "./ViewComponents/ViewArtist";
+import ViewAlbum from './ViewComponents/ViewAlbum';
 
 const spotify = new SpotifyWebApi();
 
@@ -27,7 +30,6 @@ const isLoggedIn = () =>{
 }
 
 function App() {
-  console.log("APP CALLED")
   const [state, dispatch] = useDataLayerValue();
 
   const Logout = () => {
@@ -46,7 +48,6 @@ function App() {
   }
   useEffect(()=>{
   if (_token) {
-    console.log("ALREADY LOGGED IN!");
     dispatch({
       type: "SET_TOKEN",
       token: _token,
@@ -96,8 +97,14 @@ function App() {
       <Route exact path="/search" onEnter={isLoggedIn}>
         {state.token ? <Search loginToken={state.token} spotify={spotify} /> : <Login />}
       </Route>
-      <Route path="/view/:id" onEnter={isLoggedIn}>
-        {state.token ? <View loginToken={state.token} spotify={spotify} /> : <Login />}
+      <Route path="/album/:id">
+        {state.token ?  <ViewAlbum spotify={spotify}/>: <Login />}
+      </Route>
+      <Route path="/artist/:id">
+        {state.token ? <ViewArtist spotify={spotify}/>: <Login />}
+      </Route>
+      <Route path="/track/:id" >
+        {state.token ? <ViewTrack spotify={spotify}/>: <Login />}
       </Route>
       <Route path="/" >
         <h1>This is not a url :(</h1>

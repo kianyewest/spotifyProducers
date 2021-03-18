@@ -2,54 +2,78 @@ import React,{useState,useEffect} from 'react'
 import { useRouteMatch } from 'react-router-dom';
 import { useDataLayerValue } from "./DataLayer";
 import { ListGroup,Image, Spinner} from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 
 
 function View({spotify}) {
     const [state, dispatch] = useDataLayerValue();
-    const [album,setAlbum] = useState()
+    const [spotifyResults,setResults] = useState()
     const [geniusResults,setGeniusResults] = useState();
 
-    
-    // spotify.setAccessToken(state.token);
-    // console.log("the state: ",state);
     const match = useRouteMatch();
-    // console.log("match:",match);
-    // spotify.search
 
-    useEffect(()=>{
-        spotify.getAlbum(match.params.id).then(
-          function (data) {
-            console.log('Albums information', data);
-            setAlbum(data);
+
+    const getSpotifyData = ()=>{
+      switch(match.params.type) {
+        case 'album':
+          return spotify.getAlbum(match.params.id);
+        case 'artist':
+          return spotify.getArtist(match.params.id);
+        case 'track':
+          return spotify.getTrack(match.params.id);;
+        default:
+          return 'Error';
+      }
+    }
+
+    const displaySpotifyData  = ()=>{
+      console.log("displaying: ",match.params.type,spotifyResults)
+      switch(match.params.type) {
+        case 'album':
+          return <ListGroup>{spotifyResults.tracks.items.map((track) => showTrack(track))}</ListGroup>
+        case 'artist':
+          return showArtist(spotifyResults);
+        case 'track':
+          return "Temp"
+        default:
+          return 'Unable to display data :(';
+      }
+    }
+
+
+    
+    // useEffect(()=>{
+    //   getSpotifyData().then(
+    //       function (data) {
+    //         console.log('Albums information', data);
+    //         setResults(data);
         
-              fetch('/api?'+ new URLSearchParams({searchTerm: data.artists[0].name}))
-              .then(res => res.json())
-              .then(data=>{
+    //           fetch('/api?'+ new URLSearchParams({searchTerm: getGeniusSearchTerm() data.artists[0].name}))
+    //           .then(res => res.json())
+    //           .then(data=>{
                 
-                console.log("data: ",data);
-                setGeniusResults(data.response.hits)
-              }) 
+    //             console.log("data: ",data);
+    //             setGeniusResults(data.response.hits)
+    //           }) 
             
-          },
-          function (err) {
-            console.error(err);
-          }
-        )    
-    },[])
+    //       },
+    //       function (err) {
+    //         console.error(err);
+    //       }
+    //     )    
+    // },[])
 
-      const showTracks = (track,imageUrl) =>  {
-      return   <ListGroup.Item key={track.id}><img   src={album.images[2].url}/>{track.name} {track.artists[0].name} </ListGroup.Item>
-      }  
+     
     return (
       <div class="container-fluid">
                 <div class="row">
                     <div class="col-sm">
                     
                     <h2>spotify results</h2>
-
-                    <ListGroup> 
+                    {spotifyResults ? displaySpotifyData(): <Spinner animation="border" />}
+                    {/* <ListGroup> 
                     {album ? album.tracks.items.map((track) => showTracks(track)): <Spinner animation="border" />}
-                    </ListGroup>
+                    </ListGroup> */}
                     </div>
                     <div class="col-sm">
                     <h2>geniusResults</h2>
@@ -75,3 +99,17 @@ function View({spotify}) {
 }
 
 export default View
+
+const showTrack = (track) =>  {
+  return <Link to={{  pathname: `/view/track/${track.id}` }}>
+    {/* /Get smallest image possible, to reduce loading time */}
+<ListGroup.Item key={track.id}> {track.name} </ListGroup.Item>
+</Link>
+}
+
+const showArtist = (artist) =>  {
+  return 
+    {/* /Get smallest image possible, to reduce loading time */}
+<ListGroup.Item key={artist.id}> {artist.images.length && <img   src={artist.images[artist.images.length -1].url}/>}{artist.name} </ListGroup.Item>
+
+}
