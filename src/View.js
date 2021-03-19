@@ -48,7 +48,7 @@ function View({spotify}) {
     //         console.log('Albums information', data);
     //         setResults(data);
         
-    //           fetch('/api?'+ new URLSearchParams({searchTerm: getGeniusSearchTerm() data.artists[0].name}))
+    //           fetch('/api/search?'+ new URLSearchParams({searchTerm: getGeniusSearchTerm() data.artists[0].name}))
     //           .then(res => res.json())
     //           .then(data=>{
                 

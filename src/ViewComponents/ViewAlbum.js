@@ -23,12 +23,17 @@ function ViewAlbum({ spotify }) {
         setSpotifyResults(data);
 
         fetch(
-          "/api?" + new URLSearchParams({ searchTerm: data.artists[0].name })
+          "/api/search?" +
+            new URLSearchParams({
+              artistName: data.artists[0].name,
+              albumName: data.name,
+              firstTrack: data.tracks.items[0].name,
+            })
         )
           .then((res) => res.json())
           .then((data) => {
             console.log("data: ", data);
-            setGeniusResults(data.response.hits);
+            setGeniusResults(data.response);
           });
       },
       function (err) {
@@ -41,21 +46,15 @@ function ViewAlbum({ spotify }) {
     return (
       <Container>
         <Row>
-          <Col className="text-center"sm={4} mx-auto>
-            
-            <Image src={spotifyResults.images[1].url} rounded /> 
+          <Col className="text-center" sm={4} mx-auto>
+            <Image src={spotifyResults.images[1].url} rounded />
           </Col>
           <Col>
             <h1>{spotifyResults.name}</h1>
-            <h3>
-              By{" "}
-              {displayArtistsNames(spotifyResults.artists)}
-              
-              
-            </h3>
+            <h3>By {displayArtistsNames(spotifyResults.artists)}</h3>
           </Col>
         </Row>
-        <Row >
+        <Row>
           <Col sm={4}>
             <ListGroup>
               {spotifyResults.tracks.items.map((track) => showTrack(track))}
@@ -65,6 +64,10 @@ function ViewAlbum({ spotify }) {
       </Container>
     );
   };
+
+  // const displayGeniusResults = () =>{
+
+  // }
   return (
     <>
       {spotifyResults ? (
@@ -72,6 +75,12 @@ function ViewAlbum({ spotify }) {
       ) : (
         <Spinner animation="border" />
       )}
+
+      {/* {geniusResults ? (
+        displaySpotifyResults()
+      ) : (
+        <Spinner animation="border" />
+      )} */}
     </>
   );
 }
@@ -82,21 +91,25 @@ const showTrack = (track) => {
   return (
     <Link to={{ pathname: `/track/${track.id}` }}>
       {/* /Get smallest image possible, to reduce loading time */}
-  <ListGroup.Item key={track.id}> {track.track_number}.   {track.name}  <p color={"grey"}>{track.artists.length>1 && "-"} {track.artists.length>1 && displayArtistsNames(track.artists.slice(1))}</p></ListGroup.Item>
+      <ListGroup.Item key={track.id}>
+        {" "}
+        {track.track_number}. {track.name}{" "}
+        <p color={"grey"}>
+          {track.artists.length > 1 && "-"}{" "}
+          {track.artists.length > 1 &&
+            displayArtistsNames(track.artists.slice(1))}
+        </p>
+      </ListGroup.Item>
     </Link>
   );
 };
 
-const displayArtistsNames = (artists) =>{
-  return (
-     artists.map((artist, index) => {
-      return (
-        <Link to={{ pathname: `/artist/${artist.id}` }}>
-          {index === artists.length - 1
-            ? artist.name
-            : artist.name + ", "}
-        </Link>
-      );
-    })
-  )
-}
+const displayArtistsNames = (artists) => {
+  return artists.map((artist, index) => {
+    return (
+      <Link to={{ pathname: `/artist/${artist.id}` }}>
+        {index === artists.length - 1 ? artist.name : artist.name + ", "}
+      </Link>
+    );
+  });
+};
