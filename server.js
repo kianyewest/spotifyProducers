@@ -6,16 +6,20 @@ const port = process.env.PORT || 8080;
 app.listen(port, () => console.log(`Listening on port ${port}`));
 var axios = require("axios");
 
-var searchConfig = (query) => {
+const config = (query) =>{
   return {
     method: "get",
-    url: `https://api.genius.com/search?q=${query}`,
+    url: `https://api.genius.com/${query}`,
     headers: {
       Authorization:
         "Bearer Vc3TTP0H4K725TiOtFBrERqNRQA2LSbg5s_YHqUaUVjqUUXUAcFBH22tUO1X--gd",
       Cookie: "__cfduid=d938a28355c93f4c414c99724297184811615539778",
     },
   };
+}
+
+var searchConfig = (query) => {
+  return config(`search?q=${query}`);
 };
 
 // create a GET route
@@ -26,7 +30,7 @@ app.get("/api/search", (req, res) => {
   console.log("hit API with: ", query);
   axios(searchConfig(query))
     .then(function (response) {
-      console.log(response.data)
+      console.log(JSON.stringify(response.data))
       const filteredForArtist = response.data.response.hits.filter((result)=>{return result.result.primary_artist.name === req.query.artistName})
        
       if(filteredForArtist.length>0){
@@ -49,16 +53,10 @@ app.get("/api/search", (req, res) => {
     });
 });
 
+
+
 var songConfig = (id) => {
-  return {
-    method: "get",
-    url: `https://api.genius.com/songs/${id}`,
-    headers: {
-      Authorization:
-        "Bearer Vc3TTP0H4K725TiOtFBrERqNRQA2LSbg5s_YHqUaUVjqUUXUAcFBH22tUO1X--gd",
-      Cookie: "__cfduid=d938a28355c93f4c414c99724297184811615539778",
-    },
-  };
+  return config(`songs/${id}`);
 };
 
 // create a GET route
@@ -69,17 +67,54 @@ app.get("/api/song", (req, res) => {
   console.log("hit API with id: ", query);
   axios(songConfig(query))
     .then(function (response) {
-      console.log("res: ",response.data)
-      // res.send(JSON.stringify({ x: 5, y: 6 }))
-      console.log("returning: ",response.data.response.song)
       res.send(JSON.stringify(response.data.response.song));
     })
     .catch(function (error) {
       console.log(error);
     });
-  // res.send(JSON.stringify({ x: 5, y: 6 }))
 });
 
+
+var artistConfig = (id) => {
+  return config(`artists/${id}`);
+};
+
+app.get("/api/artist", (req, res) => {
+
+  const id = req.query.artistId
+  console.log("hit API with artist id: ", id);
+  axios(artistConfig(id))
+    .then(function (response) {
+      // console.log("res: ",response.data)
+      // console.log("hm: ",response.data.response.artist)
+      // res.send(JSON.stringify({x:4,y:3}))
+       res.send(JSON.stringify(response.data.response.artist));
+      
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+});
+
+var artistSongConfig = (id) => {
+  return config(`artists/${id}/songs?per_page=50&sort=popularity`);
+};
+
+app.get("/api/artist/songs", (req, res) => {
+  const id = req.query.artistId
+  console.log("hit API with artist id: ", id);
+  axios(artistSongConfig(id))
+    .then(function (response) {
+      // console.log("res: ",response.data)
+      // console.log("hm: ",response.data.response.artist)
+      // res.send(JSON.stringify({x:4,y:3}))
+       res.send(JSON.stringify(response.data.response.songs));
+      
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+});
 
 app.get("/calback", (req, res) => {
   console.log("huh..");

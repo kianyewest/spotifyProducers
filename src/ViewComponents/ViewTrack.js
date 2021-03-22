@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouteMatch } from "react-router-dom";
 import { Spinner } from "react-bootstrap";
+import {Link} from "react-router-dom";
 
 function ViewTrack({ spotify }) {
   const [spotifyResults, setSpotifyResults] = useState();
@@ -12,7 +13,7 @@ function ViewTrack({ spotify }) {
   useEffect(() => {
     spotify.getTrack(match.params.id).then(
       function (data) {
-        console.log("track information", data);
+        console.log("spotify track information", data);
         setSpotifyResults(data);
         const spotifyArtistName = data.artists[0].name;
         const spotifyAlbumName = data.album.name;
@@ -27,11 +28,11 @@ function ViewTrack({ spotify }) {
         )
           .then((res) => res.json())
           .then((data) => {
-            console.log("d: ", data);
+            console.log("track search result from genius: ", data);
             if (data.length === 0) {
-                setNoGeniusResult(true);
+              setNoGeniusResult(true);
             } else {
-                setNoGeniusResult(false);
+              setNoGeniusResult(false);
               // console.log("data", data[0].result.id);
               fetch(
                 "/api/song?" +
@@ -41,7 +42,7 @@ function ViewTrack({ spotify }) {
               )
                 .then((res) => res.json())
                 .then((data) => {
-                  console.log("here", data);
+                  console.log("track data from genius search:", data);
                   setGeniusResults(data);
                 });
             }
@@ -62,7 +63,19 @@ function ViewTrack({ spotify }) {
       <>
         <h2>Producers</h2>
         {geniusResults.producer_artists.map((prod) => {
-          return <h3>{prod.name}</h3>;
+          // console.log("prod: ",prod)
+          return (
+            <h3>
+              <Link
+                to={{
+                  pathname: "/artist/72",//spotify id
+                  state:{geniusArtistId: prod.id},
+                }}
+              >
+                {prod.name}
+              </Link>
+            </h3>
+          );
         })}
       </>
     );
@@ -74,7 +87,13 @@ function ViewTrack({ spotify }) {
       ) : (
         <Spinner animation="border" />
       )}
-      {noGeniusResult ? <h3>No Result Found</h3> : (geniusResults ? displayGeniusResults() : <Spinner animation="border" />)}
+      {noGeniusResult ? (
+        <h3>No Result Found</h3>
+      ) : geniusResults ? (
+        displayGeniusResults()
+      ) : (
+        <Spinner animation="border" />
+      )}
     </>
   );
 }
