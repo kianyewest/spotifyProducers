@@ -26,7 +26,7 @@ var searchConfig = (query) => {
 app.get("/api/search", (req, res) => {
   // res.send({working:"its working"});
 
-  const query = req.query.firstTrack + " by " + req.query.artistName;
+  const query = req.query.firstTrack ? req.query.firstTrack + " by " + req.query.artistName : req.query.artistName;
   console.log("hit API with: ", query);
   axios(searchConfig(query))
     .then(function (response) {

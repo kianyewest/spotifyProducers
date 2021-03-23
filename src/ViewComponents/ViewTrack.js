@@ -68,7 +68,7 @@ function ViewTrack({ spotify }) {
             <h3>
               <Link
                 to={{
-                  pathname: "/artist/72",//spotify id
+                  pathname: `/producer/${prod.id}`,
                   state:{geniusArtistId: prod.id},
                 }}
               >

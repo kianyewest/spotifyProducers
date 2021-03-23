@@ -16,6 +16,7 @@ import { useDataLayerValue } from "./DataLayer";
 import Search from './Search';
 import View from './View';
 import ViewTrack from "./ViewComponents/ViewTrack";
+import ViewProducer from "./ViewComponents/ViewProducer";
 import ViewArtist from "./ViewComponents/ViewArtist";
 import ViewAlbum from './ViewComponents/ViewAlbum';
 
@@ -100,7 +101,10 @@ function App() {
       <Route path="/album/:id">
         {state.token ?  <ViewAlbum spotify={spotify}/>: <Login />}
       </Route>
-      <Route path="/artist/:id">
+      <Route path="/producer/:geniusArtistId">
+        {state.token ? <ViewProducer spotify={spotify}/>: <Login />}
+      </Route>
+      <Route path="/artist/:spotifyArtistId">
         {state.token ? <ViewArtist spotify={spotify}/>: <Login />}
       </Route>
       <Route path="/track/:id" >
