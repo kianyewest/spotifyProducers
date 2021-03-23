@@ -276,9 +276,10 @@ function ViewArtist({ spotify }) {
             onClick={() => {
               !geniusResults.loading && getGeniusArtistTracks();
             }}
-            disabled={geniusResults.loading}
+            disabled={geniusResults.loading || !geniusResults.nextPage}
           >
-            {geniusResults.loading ? "Loading…" : "Click to load more"}
+            
+            {geniusResults.nextPage ? (geniusResults.loading ? "Loading…" : "Click to load more") : "No more Songs to display"}
           </Button>
         </Row>
         <Accordion>
