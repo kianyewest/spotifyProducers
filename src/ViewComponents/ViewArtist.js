@@ -27,7 +27,7 @@ function ViewArtist({ spotify }) {
         geniusToSpotify[track.id].artists[0].name;
 
     // {geniusToSpotify.hasOwnProperty(track.id) ? (!geniusToSpotify[track.id].hasOwnProperty('noResult') ? geniusToSpotify[track.id].name :"Unable to find") : "Need to Search"}
-
+   
     return (
       // <Link to={{ pathname: `/track/${track.id}` }}>
       <ListGroup.Item key={track.id}>
@@ -40,7 +40,7 @@ function ViewArtist({ spotify }) {
         </Button>
 
         {found ? (
-          nameAndArtist
+          <a target="_blank" href={geniusToSpotify[track.id].external_urls.spotify}>{nameAndArtist}</a>
         ) : searched ? (
           <h1>No result</h1>
         ) : (
@@ -166,14 +166,14 @@ function ViewArtist({ spotify }) {
           //try again with higher limit
           spotify.search(query, ["track"], { limit: 50 }).then(
             function (data) {
-              console.log("result from higher limit: ", data);
+              // console.log("result from higher limit: ", data);
               if (!processResults(data, geniusTrack)) {
                 //try again with only track name
                 spotify
                   .search(geniusTrack.title, ["track"], { limit: 50 })
                   .then(
                     function (data) {
-                      console.log("result from reduced search: ", data);
+                      // console.log("result from reduced search: ", data);
                       //if that failed modify the search term
                       if (!processResults(data, geniusTrack)) {
                         // console.log("oringal q: ", query);
@@ -184,7 +184,7 @@ function ViewArtist({ spotify }) {
                         // console.log("newQuery", newQuery);
                         spotify.search(newQuery, ["track"], { limit: 50 }).then(
                           function (data) {
-                            console.log("result from reduced search: ", data);
+                            // console.log("result from reduced search: ", data);
                             processResults(data, geniusTrack);
                           },
                           function (err) {
@@ -283,6 +283,7 @@ function ViewArtist({ spotify }) {
         </Row>
         <Accordion>
           {Object.keys(groupArtist).map((geniusArtistId, index) => {
+            
             return (
               <Card key={geniusArtistId}>
                 <Accordion.Toggle as={Card.Header} eventKey={`${index}`}>
