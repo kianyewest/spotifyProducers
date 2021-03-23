@@ -39,7 +39,13 @@ function ViewArtist({ spotify }) {
           {track.primary_artist.name}
         </Button>
 
-        {found ? nameAndArtist : searched ? "No result" : "Need to search"}
+        {found ? (
+          nameAndArtist
+        ) : searched ? (
+          <h1>No result</h1>
+        ) : (
+          "Need to search"
+        )}
       </ListGroup.Item>
       // </Link>
     );
@@ -59,7 +65,7 @@ function ViewArtist({ spotify }) {
       )
         .then((res) => res.json())
         .then((data) => {
-          console.log("songs::: ", data);
+          // console.log("songs::: ", data);
           setGeniusResults((oldResults) => {
             return {
               ...oldResults,
@@ -70,7 +76,7 @@ function ViewArtist({ spotify }) {
           });
 
           //for each track, see if we can find spotify equivilent
-          //  data.songs.map((track)=>getSpotifyTrackFromGeniusTrack(track))
+            data.songs.map((track)=>getSpotifyTrackFromGeniusTrack(track))
         });
     } else {
       console.log("no more pages");
@@ -79,9 +85,15 @@ function ViewArtist({ spotify }) {
 
   const matchExactArtist = (spotifyResult, geniusArtistName) => {
     return spotifyResult.filter((track) => {
-      const s1 = track.artists[0].name;
+      const spotifyArtist = track.artists[0].name.normalize("NFKD");
       //normalise to so that characters such as space and no-break space will match each other
-      return s1.normalize("NFKD") === geniusArtistName.normalize("NFKD");
+      // console.log(track.name,spotifyArtist,geniusArtistName,spotifyArtist.localeCompare(geniusArtistName, 'en', { sensitivity: 'base' })===0);
+      return (
+        spotifyArtist.localeCompare(geniusArtistName, "en", {
+          sensitivity: "base",
+        }) === 0
+      );
+      // geniusArtistName
     });
   };
 
@@ -89,91 +101,109 @@ function ViewArtist({ spotify }) {
     //try seeing if artist is within genius artist name i.e "Drake" within the artist name of "Drake,Kanye west, Lil Wayne"
     //unsure of why genius would store an artist as a list of artists they already have in there database with no reference to them :(
     return spotifyResult.filter((track) => {
-      const spotifyArtist = track.artists[0].name;
-      return geniusArtistName
+      const spotifyArtist = track.artists[0].name
         .normalize("NFKD")
-        .includes(spotifyArtist.normalize("NFKD"));
+        .toUpperCase();
+      return geniusArtistName.includes(spotifyArtist);
     });
   };
 
-  const saveResults = (sameArtist,geniusTrack)=>{
-    console.log("sameArtist", sameArtist);
-        if (sameArtist.length > 0) {
-          const topSong = sameArtist[0];
-          setGeniusToSpotify((prev) => {
-            return { ...prev, [geniusTrack.id]: topSong };
-          });
-          setSpotifyToGenius((prev) => {
-            return { ...prev, [topSong.id]: geniusTrack };
-          });
-        } else {
-          const noResultObj = { noResult: true };
-          setGeniusToSpotify((prev) => {
-            return { ...prev, [geniusTrack.id]: noResultObj };
-          });
-          // setSpotifyToGenius((prev)=>{return {...prev, [topSong.id]:noResultObj}})
-        }
-  }
+  const processResults = (data, geniusTrack) => {
+    // console.log(data)
+    // console.log("geniusTrack.primary_artist",geniusTrack.primary_artist)
+    //exact match
+    const geniusArtistName = geniusTrack.primary_artist.name
+      .normalize("NFKD")
+      .toUpperCase();
+    var sameArtist = matchExactArtist(data.tracks.items, geniusArtistName);
 
-  const processResults = (data,geniusTrack) =>{
-      //exact match
-      var sameArtist = matchExactArtist(
-        data.tracks.items,
-        geniusTrack.primary_artist.name
-      );
-
-      //if no matches
-      if (sameArtist.length === 0) {
-        sameArtist = matchSimilarArtist(
-          data.tracks.items,
-          geniusTrack.primary_artist.name
-        );
-      }
-      if (sameArtist.length !== 0) {
-        saveResults(sameArtist,geniusTrack)
-        return true;
-      }else{
-        return false;
-      }
-
-  }
-
-  const getSpotifyTrackFromGeniusTrack = (geniusTrack) => {
-    const query = geniusTrack.title;
-    const queryA = geniusTrack.title_with_featured.replace("Ft.", "feat.");
-    //check entry does not already exist
-    if (geniusToSpotify.hasOwnProperty(geniusTrack.id)) {
-      return;
-    } else {
-      console.log("searching for: ", query);
+    //if no matches
+    if (sameArtist.length === 0) {
+      sameArtist = matchSimilarArtist(data.tracks.items, geniusArtistName);
     }
 
-    console.log("geniusTrack", geniusTrack);
+    if (sameArtist.length > 0) {
+      const topSong = sameArtist[0];
+      setGeniusToSpotify((prev) => {
+        return { ...prev, [geniusTrack.id]: topSong };
+      });
+      setSpotifyToGenius((prev) => {
+        return { ...prev, [topSong.id]: geniusTrack };
+      });
+      return true;
+    } else {
+      const noResultObj = { noResult: true };
+      setGeniusToSpotify((prev) => {
+        return { ...prev, [geniusTrack.id]: noResultObj };
+      });
+      // setSpotifyToGenius((prev)=>{return {...prev, [topSong.id]:noResultObj}})
+      return false;
+    }
+  };
 
-    spotify.search(query, ["track"]).then(
+  const getSpotifyTrackFromGeniusTrack = (geniusTrack) => {
+    const query = geniusTrack.title + " " + geniusTrack.primary_artist.name;
+    //check entry does not already exist
+    // if (geniusToSpotify.hasOwnProperty(geniusTrack.id)) {
+    //   console.log("already searched for: ", query);
+    //   return;
+    // } else {
+    //   //  console.log("searching for: ", query);
+
+    // }
+
+    // console.log("geniusTrack", geniusTrack);
+    // const q = String.raw();
+    const cleanQuery = query.normalize("NFKD").replace("’", "'");
+    
+    //this is ugly, it searches for the track with artist name, if that fails then
+    //searches with a higher limit i.e return more tracks
+    // if that fails it searches only using the title
+    //if that fails it reduces the title to a bare form and searches again
+    spotify.search(cleanQuery, ["track"],{limit:10}).then(
       function (data) {
-        console.log("spotify tracks information", data);
-        console.log(geniusTrack);
-
-        if(!processResults(data,geniusTrack)){
-          //try again
-          console.log("oringal q: ", query);
-          const regex = /\(([^HS]{1,})\)/gm;
-          const newQuery = query.replace(regex, "");
-          console.log("newQuery", newQuery);
-          spotify.search(newQuery, ["track"]).then(
+        if (!processResults(data, geniusTrack)) {
+          //try again with higher limit
+          spotify.search(query, ["track"], { limit: 50 }).then(
             function (data) {
-              console.log("result from reduced: ", data);
-              processResults(data,geniusTrack)
+              console.log("result from higher limit: ", data);
+              if (!processResults(data, geniusTrack)) {
+                //try again with only track name
+                spotify
+                  .search(geniusTrack.title, ["track"], { limit: 50 })
+                  .then(
+                    function (data) {
+                      console.log("result from reduced search: ", data);
+                      //if that failed modify the search term
+                      if (!processResults(data, geniusTrack)) {
+                        // console.log("oringal q: ", query);
+                        //removes text between brackets i.e "Speedom (Worldwide Choppers 2)" becomes "Speedom"
+                        //this was done as spotify represented Worldwide Choppers 2 as Wc2, and the song title for it was Speedom (Wc2) which was not found when searching
+                        const regex = /\(([^HS]{1,})\)/gm;
+                        const newQuery = geniusTrack.title.replace(regex, "");
+                        // console.log("newQuery", newQuery);
+                        spotify.search(newQuery, ["track"], { limit: 50 }).then(
+                          function (data) {
+                            console.log("result from reduced search: ", data);
+                            processResults(data, geniusTrack);
+                          },
+                          function (err) {
+                            console.error(err);
+                          }
+                        );
+                      }
+                    },
+                    function (err) {
+                      console.error(err);
+                    }
+                  );
+              }
             },
             function (err) {
               console.error(err);
             }
           );
         }
-
-        
-        
       },
       function (err) {
         console.error(err);
@@ -215,7 +245,7 @@ function ViewArtist({ spotify }) {
     )
       .then((res) => res.json())
       .then((data) => {
-        console.log("genius Artist info: ", data);
+        // console.log("genius Artist info: ", data);
         setArtistInfo(data);
       });
 
