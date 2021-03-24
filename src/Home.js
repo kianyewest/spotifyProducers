@@ -7,12 +7,6 @@ function Home({spotify}) {
     console.log(state)
     return (
         <div>
-            <Link to={{
-            pathname: '/view/hi',
-            state: {
-              fromNotifications: true
-            }
-            }}>Tyler McGinnis</Link>
             Welcome {state.user && state.user.display_name}
         </div>
     )
