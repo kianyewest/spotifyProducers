@@ -15,17 +15,10 @@ import ViewProducer from "./ViewComponents/ViewProducer";
 import ViewArtist from "./ViewComponents/ViewArtist";
 import ViewAlbum from "./ViewComponents/ViewAlbum";
 import { useRouteMatch } from "react-router-dom";
+import NewSearch from './NewSearch';
 
 const spotify = new SpotifyWebApi();
 
-const isLoggedIn = () => {
-
-  const storage = localStorage.getItem("user");
-  var { access_token,  access_expiry } = storage
-    ? JSON.parse(storage)
-    : { undefined, undefined };
-  return access_token && access_expiry < Date.now() / 1000;
-};
 
 function App() {
   const [state, dispatch] = useDataLayerValue();
@@ -36,7 +29,9 @@ function App() {
 
   const storage = localStorage.getItem("user");
 
-  var { access_token, access_expiry } = storage ? JSON.parse(storage) : { undefined, undefined };
+  var { access_token, access_expiry } = storage
+    ? JSON.parse(storage)
+    : { undefined, undefined };
 
   if (access_expiry < Date.now() / 1000) {
     localStorage.clear();
@@ -54,13 +49,11 @@ function App() {
       });
       spotify.setAccessToken(access_token);
     } else {
-
-
       const queryString = window.location.search;
 
       const urlParams = new URLSearchParams(queryString);
       const access_token = urlParams.get("access_token");
-      const expires_in = urlParams.get("expires_in")
+      const expires_in = urlParams.get("expires_in");
 
       if (access_token) {
         access_expiry = Date.now() / 1000 + parseInt(expires_in);
@@ -86,41 +79,28 @@ function App() {
       {state.token ? (
         <Switch>
           <Route exact path="/">
-            {" "}
-            <About />
-            <div className="app">
-              {state.token ? <Home spotify={spotify} /> : <Login />}
-            </div>
-            ;
+            <NewSearch  spotify={spotify} />
           </Route>
           <Route exact path="/about">
-            {state.token ? <About /> : <Login />}
+            <About />
           </Route>
-          <Route exact path="/albums" onEnter={isLoggedIn}>
-            {state.token ? (
-              <Albums loginToken={state.token} spotify={spotify} />
-            ) : (
-              <Login />
-            )}
+          <Route exact path="/albums" >
+            <Albums spotify={spotify} />
           </Route>
-          <Route exact path="/search" onEnter={isLoggedIn}>
-            {state.token ? (
-              <Search loginToken={state.token} spotify={spotify} />
-            ) : (
-              <Login />
-            )}
+          <Route exact path="/search" >
+            <Search  spotify={spotify} />
           </Route>
           <Route path="/album/:id">
-            {state.token ? <ViewAlbum spotify={spotify} /> : <Login />}
+             <ViewAlbum spotify={spotify} /> 
           </Route>
           <Route path="/producer/:geniusArtistId">
-            {state.token ? <ViewProducer spotify={spotify} /> : <Login />}
+             <ViewProducer spotify={spotify} />
           </Route>
           <Route path="/artist/:spotifyArtistId">
-            {state.token ? <ViewArtist spotify={spotify} /> : <Login />}
+             <ViewArtist spotify={spotify} /> 
           </Route>
           <Route path="/track/:id">
-            {state.token ? <ViewTrack spotify={spotify} /> : <Login />}
+             <ViewTrack spotify={spotify} />
           </Route>
           <Route path="/callback">
             <h1>Callback</h1>
@@ -138,7 +118,6 @@ function App() {
 
 function About() {
   const [state, dispatch] = useDataLayerValue();
-  console.log("ab");
   return <>About: {JSON.stringify(state.user, null, 4)}</>;
 }
 export default App;

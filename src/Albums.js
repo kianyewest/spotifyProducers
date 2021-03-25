@@ -6,6 +6,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { Link } from 'react-router-dom';
 
 function Albums({spotify}) {
+  console.log("spot album: ",spotify)
   console.log("Albums")
     // window.onload = ()=> console.log("on load");
      const [state, dispatch] = useDataLayerValue();
