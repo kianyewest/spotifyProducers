@@ -26,6 +26,14 @@ background: linear-gradient(to bottom, #38ef7d, #11998e); /* W3C, IE 10+/ Edge, 
 
   
 }
-/* div{
-  padding:40px;
-} */
+
+
+.ant-list-item:hover {
+  box-shadow: 0 0 4px #eee;
+  background-color: #d6d6d6;
+}
+
+.ant-list-item {
+  padding: 6px;
+  margin:12px;
+}

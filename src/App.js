@@ -39,7 +39,7 @@ function App() {
     access_token = undefined;
     access_expiry = undefined;
   }
-
+ 
   useEffect(() => {
     if (access_token) {
       dispatch({
@@ -50,7 +50,7 @@ function App() {
       spotify.setAccessToken(access_token);
     } else {
       const queryString = window.location.search;
-
+      console.log(window.location)
       const urlParams = new URLSearchParams(queryString);
       const access_token = urlParams.get("access_token");
       const expires_in = urlParams.get("expires_in");

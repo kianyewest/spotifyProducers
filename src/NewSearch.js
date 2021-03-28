@@ -12,12 +12,16 @@ import {
   AutoComplete,
   List,
   Avatar,
+  Divider,
+  Button,
 } from "antd";
-
+import { UserOutlined } from "@ant-design/icons";
+import { Link } from "react-router-dom";
 const { Header, Content, Footer } = Layout;
 const { Option } = Select;
 const { Search } = Input;
 
+//render title for search box
 const renderTitle = (title) => (
   <span>
     {title}
@@ -31,9 +35,11 @@ const renderTitle = (title) => (
   </span>
 );
 
-const renderItem = (id, title, count) => ({
+//render item for search box
+const renderItem = (id, title, count,category) => ({
   value: id,
   label: (
+    <Link to={{ pathname: `/${category}/${id}` }}>
     <div
       style={{
         display: "flex",
@@ -43,6 +49,7 @@ const renderItem = (id, title, count) => ({
       {title}
       <span>{count}</span>
     </div>
+    </Link>
   ),
 });
 
@@ -52,18 +59,6 @@ const doSearch = (spotify, searchTypes, query, callback) => {
     spotify.search(query, searchTypes).then(
       function (newData) {
         console.log("new Data: ", query, newData);
-        // if (newData.hasOwnProperty("albums")) {
-        //   console.log(typeof newData.albums.items);
-
-        //   newData.albums.items.sort((a, b) => {
-        //     if (a.album_type === b.album_type) {
-        //       return 0;
-        //     } else if (a.album_type === "album") {
-        //       return -1;
-        //     }
-        //     return 1;
-        //   });
-        // }
         callback(newData);
       },
       function (err) {
@@ -95,70 +90,21 @@ const Complete = ({ handleSearch, options }) => {
     >
       <Input.Search
         size="large"
-        placeholder="input here"
+        placeholder="Search here"
         enterButton
         onSearch={onSearch}
       />
     </AutoComplete>
   );
 };
-
-const SearchInput = ({ placeholder, style, spotify, searchTypes }) => {
-  const [data, setData] = useState();
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const handleSearch = (value) => {
-    console.log("value: ", value);
-    console.log("searchValue :", searchTerm);
-    if (value) {
-      console.log("getting :", searchTerm);
-      doSearch(spotify, searchTypes, value, (data) => setData(data));
-    } else {
-      setData([]);
-    }
-  };
-
-  const handleChange = (value) => {
-    console.log("value in change is: ", value);
-    setSearchTerm(value);
-  };
-
-  const options =
-    data &&
-    data.hasOwnProperty("tracks") &&
-    data.tracks.items.map((d) => <Option key={d.id}>{d.name}</Option>);
-  return (
-    <>
-      <Search
-        placeholder="input search text"
-        allowClear
-        enterButton="Search"
-        size="large"
-        onSearch={handleSearch}
-      />
-      <Select
-        showSearch
-        enterButton="Search"
-        value={searchTerm}
-        placeholder={"input here"}
-        style={{ width: 200 }}
-        defaultActiveFirstOption={false}
-        showArrow={false}
-        filterOption={false}
-        onSearch={handleSearch}
-        onChange={handleChange}
-        notFoundContent={null}
-      >
-        <Input.Search size="large" placeholder="input here" enterButton />
-        {options}
-      </Select>
-    </>
-  );
-};
-
+const emptyState = {
+  tracks: [],
+  albums: [],
+  artists: [],
+}
 // const { Header, Footer, Sider, Content } = Layout;
 function NewSearch({ spotify }) {
-  const [{tracks,albums,artists}, setData] = useState({tracks:[],albums:[],artists:[]});
+  const [{ tracks, albums, artists }, setData] = useState(emptyState);
   const [options, setOptions] = useState();
 
   const handleSearch = (value) => {
@@ -166,44 +112,118 @@ function NewSearch({ spotify }) {
       doSearch(spotify, ["track", "album", "artist"], value, (data) => {
         if (!data) {
           setOptions([]);
-          setData([]);
+          setData(emptyState);
         }
-        //   setData(data)
-        // setData(data);
-        //handle data formatting for search bar
         const options = Object.keys(data).map((category) => {
           const options = data[category].items.slice(0, 2).map((item) => {
             return renderItem(
               item.id,
               item.name,
-              item.artists ? item.artists[0].name : ""
+              item.artists ? item.artists[0].name : "",
+              category.slice(0, -1),
             );
           });
-          console.log("rendering: ", category, options);
+   
           return { label: renderTitle(category), options: options };
         });
         setOptions(options);
-        
+
         for (const category of Object.keys(data)) {
-            setData((prev)=> {return {...prev,[category]:data[category].items.slice(0,3)}})  
-
-          }
-
-        // const displayData = Object.keys(data).map((category) => {
-        //   const options = data[category].items.slice(0, 2).map((item) => {
-        //     return { title: item.name };
-        //   });
-        //   console.log("dis: ",options)
-
-        //   return options;
-        // });
-        // console.log("displayData", displayData);
-        // setData(displayData);
+          setData((prev) => {
+            return { ...prev, [category]: data[category].items };
+          });
+        }
       });
+    } else {
+      setOptions([]);
+      setData(emptyState);
     }
   };
 
-  console.log("spot: ", spotify);
+  
+  // Specific data link for each type
+  const trackData = (track) => {
+    return {
+      link: `/track/${track.id}`,
+      imgArr: track.album.images,
+      name: track.name,
+      description: track.artists[0].name,
+      id: track.id,
+    };
+  };
+
+  const albumData = (album) => {
+    return {
+      link: `/album/${album.id}`,
+      imgArr: album.images,
+      name: album.name,
+      description: album.artists[0].name,
+      id: album.id,
+    };
+  };
+
+  const artistData = (artist) => {
+    return {
+      link: `/artist/${artist.id}`,
+      imgArr: artist.images,
+      name: artist.name,
+      description: "",
+      id: artist.id,
+    };
+  };
+
+  //how to lay items out
+  function ItemLayout({ data, headerName, itemData }) {
+    return (
+      <Col span={rowLength}>
+        <List
+        loading={false}
+        loadMore={()=> {return <div>hi</div>}}
+        size="large"
+          header={
+            <Divider orientation="left" style={{ padding: 0 }}>
+              {headerName}
+            </Divider>
+          }
+          itemLayout="horizontal"
+          dataSource={data}
+          renderItem={(item) => {
+            const { link, imgArr, name, description, id } = itemData(item);
+            return (
+              <Link to={{ pathname: link }}>
+                <List.Item
+                  extra={
+                    <Link to={{ pathname: `/generate/${id}` }}>
+                      <Button size="large" type="primary">
+                        Generate Playlist
+                      </Button>
+                    </Link>
+                  }
+                >
+                  <List.Item.Meta
+                    avatar={
+                      imgArr.length > 0 ? (
+                        <Avatar shape="square" size={64} src={imgArr[imgArr.length-1].url} />
+                      ) : (
+                        <Avatar shape="square" size={64} icon={<UserOutlined />}
+                        />
+                      )
+                    }
+                    title={name}
+                    description={description}
+                  />
+                </List.Item>
+              </Link>
+            );
+          }}
+        />
+      </Col>
+    );
+  }
+
+  
+  const numItems = 5;
+  const rowLength = 7;
   return (
     <>
       <Layout className="layout">
@@ -219,67 +239,20 @@ function NewSearch({ spotify }) {
               </div>
             </Col>
           </Row>
-          <Row>
-          <Col span={8}>
-                <List
-                  itemLayout="horizontal"
-                  dataSource={tracks}
-                  renderItem={(item) => (
-                    <List.Item>
-                      <List.Item.Meta
-                        avatar={
-                            <Avatar shape="square" size={64} src={item.album.images[0].url}  />
-                        }
-                        title={<a href="https://ant.design">{item.name}</a>}
-                        description={item.artists[0].name}
-                      />
-                      {console.log("track,", item)}
-                    </List.Item>
-                  )}
-                />
-              </Col>
-              <Col span={8}>
-                <List
-                  itemLayout="horizontal"
-                  dataSource={albums}
-                  renderItem={(item) => (
-                    <List.Item>
-                      <List.Item.Meta
-                        avatar={
-                            <Avatar shape="square" size={64} src={item.images[0].url}  />
-                        }
-                        title={<a href="https://ant.design">{item.name}</a>}
-                        description={item.artists[0].name}
-                      />
-                
-                    </List.Item>
-                  )}
-                />
-              </Col>
-              <Col span={8}>
-                <List
-                  itemLayout="horizontal"
-                  dataSource={artists}
-                  renderItem={(item) => (
-                    <List.Item>
-                      <List.Item.Meta
-                        avatar={
-                            <Avatar shape="square" size={64} src={item.images[0].url}  />
-                        }
-                        title={<a href="https://ant.design">{item.name}</a>}
-                      />
-               
-                    </List.Item>
-                  )}
-                />
-              </Col>
-
-            
+          <Row justify="space-around">
+             
+            <ItemLayout data={tracks.slice(0,numItems)} headerName="Songs" itemData={trackData} />
+            <ItemLayout data={albums.slice(0,numItems)} headerName="Albums" itemData={albumData} />
+            <ItemLayout data={artists.slice(0,numItems)} headerName="Artists" itemData={artistData} />
+           
           </Row>
+          {/* <Row>
+            <Col>
+            <Button onClick={()=>showMore()}>loading more</Button>
+            </Col>
+         
+          </Row> */}
         </Content>
-        <Footer style={{ textAlign: "center" }}>
-          Ant Design ©2018 Created by Ant UED
-        </Footer>
       </Layout>
     </>
   );
