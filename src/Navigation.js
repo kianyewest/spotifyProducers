@@ -2,7 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Navbar, Nav, Container,NavDropdown,Form,FormControl,Button } from 'react-bootstrap';
 import {IndexLinkContainer} from 'react-router-bootstrap'
-const Navigation = ({Logout}) => {
+import SearchFunction from './SearchFunction';
+import { useState } from "react";
+
+const Navigation = ({Logout,spotify}) => {
+  const [data,setData] = useState()
   return (
     <Navbar bg="dark" variant="dark">
     <Navbar.Brand href="#home">Navbar</Navbar.Brand>
@@ -15,10 +19,11 @@ const Navigation = ({Logout}) => {
 
       <Button onClick={()=>Logout()}>Partial Logout</Button>
     </Nav>
-    <Form inline>
-      <FormControl type="text" placeholder="Search" className="mr-sm-2" />
-      <Button variant="outline-info">Search</Button>
-    </Form>
+    <SearchFunction
+                  spotify={spotify}
+                  size={300}
+                  
+                />
   </Navbar>
     
   );

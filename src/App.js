@@ -74,7 +74,7 @@ function App() {
 
   return (
     <Router>
-      {state.token && <Navigation Logout={Logout} />}
+      {state.token && <Navigation Logout={Logout} spotify={spotify} />}
 
       {state.token ? (
         <Switch>

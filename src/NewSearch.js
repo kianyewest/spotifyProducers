@@ -16,129 +16,24 @@ import {
   Button,
 } from "antd";
 import { UserOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { Link ,useLocation} from "react-router-dom";
+import SearchFunction from './SearchFunction';
 const { Header, Content, Footer } = Layout;
 const { Option } = Select;
 const { Search } = Input;
 
-//render title for search box
-const renderTitle = (title) => (
-  <span>
-    {title}
-    <div
-      style={{
-        float: "right",
-      }}
-    >
-      View All
-    </div>
-  </span>
-);
 
-//render item for search box
-const renderItem = (id, title, count,category) => ({
-  value: id,
-  label: (
-    <Link to={{ pathname: `/${category}/${id}` }}>
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-      }}
-    >
-      {title}
-      <span>{count}</span>
-    </div>
-    </Link>
-  ),
-});
-
-const doSearch = (spotify, searchTypes, query, callback) => {
-  console.log("query called: ", query);
-  query &&
-    spotify.search(query, searchTypes).then(
-      function (newData) {
-        console.log("new Data: ", query, newData);
-        callback(newData);
-      },
-      function (err) {
-        console.error("err", err);
-      }
-    );
-};
-
-const Complete = ({ handleSearch, options }) => {
-  const onSelect = (value) => {
-    console.log("onSelect", value);
-  };
-
-  const onSearch = (term) => {
-    console.log("term", term);
-  };
-
-  console.log("big options: ", options);
-
-  return (
-    <AutoComplete
-      dropdownMatchSelectWidth={true}
-      style={{
-        width: 700,
-      }}
-      options={options}
-      onSelect={onSelect}
-      onSearch={handleSearch}
-    >
-      <Input.Search
-        size="large"
-        placeholder="Search here"
-        enterButton
-        onSearch={onSearch}
-      />
-    </AutoComplete>
-  );
-};
 const emptyState = {
   tracks: [],
   albums: [],
   artists: [],
 }
-// const { Header, Footer, Sider, Content } = Layout;
+
 function NewSearch({ spotify }) {
   const [{ tracks, albums, artists }, setData] = useState(emptyState);
-  const [options, setOptions] = useState();
+  const [numItems, setNumItems] = useState(5);
 
-  const handleSearch = (value) => {
-    if (value) {
-      doSearch(spotify, ["track", "album", "artist"], value, (data) => {
-        if (!data) {
-          setOptions([]);
-          setData(emptyState);
-        }
-        const options = Object.keys(data).map((category) => {
-          const options = data[category].items.slice(0, 2).map((item) => {
-            return renderItem(
-              item.id,
-              item.name,
-              item.artists ? item.artists[0].name : "",
-              category.slice(0, -1),
-            );
-          });
-   
-          return { label: renderTitle(category), options: options };
-        });
-        setOptions(options);
-
-        for (const category of Object.keys(data)) {
-          setData((prev) => {
-            return { ...prev, [category]: data[category].items };
-          });
-        }
-      });
-    } else {
-      setOptions([]);
-      setData(emptyState);
-    }
-  };
+  
 
   
   // Specific data link for each type
@@ -221,8 +116,8 @@ function NewSearch({ spotify }) {
     );
   }
 
-  
-  const numItems = 5;
+  const location = useLocation();
+  console.log(location)
   const rowLength = 7;
   return (
     <>
@@ -231,10 +126,12 @@ function NewSearch({ spotify }) {
           <Row>
             <Col span={24}>
               <div className="jumbotron" align="center">
-                <Complete
+                <SearchFunction
+                  defaultSearchTerm={location.state ?location.state.searchTerm :undefined }
                   spotify={spotify}
-                  options={options}
-                  handleSearch={handleSearch}
+                  setData={setData}
+                  emptyDataState={emptyState}
+                  size={700}
                 />
               </div>
             </Col>
@@ -246,12 +143,12 @@ function NewSearch({ spotify }) {
             <ItemLayout data={artists.slice(0,numItems)} headerName="Artists" itemData={artistData} />
            
           </Row>
-          {/* <Row>
+          <Row>
             <Col>
-            <Button onClick={()=>showMore()}>loading more</Button>
+            <Button onClick={()=>setNumItems((prev)=>{return prev+10})}>loading more</Button>
             </Col>
          
-          </Row> */}
+          </Row>
         </Content>
       </Layout>
     </>
