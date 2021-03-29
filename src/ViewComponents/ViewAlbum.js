@@ -1,14 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { useRouteMatch } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import {
-  ListGroup,
-  Image,
-  Spinner,
-  Container,
-  Row,
-  Col,
+  Col, Container, Image, ListGroup, Row, Spinner
 } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, useRouteMatch } from "react-router-dom";
 
 function ViewAlbum({ spotify }) {
   const [spotifyResults, setSpotifyResults] = useState();

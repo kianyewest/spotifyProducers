@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useRouteMatch,Redirect,useHistory } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useHistory, useRouteMatch } from "react-router-dom";
 
 
 function ViewArtist({spotify}) {

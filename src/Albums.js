@@ -1,38 +1,18 @@
 import React from 'react'
 import { useEffect,useState } from 'react';
-import { useDataLayerValue } from "./DataLayer";
-import {  Spinner} from 'react-bootstrap';
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Link } from 'react-router-dom';
 
 function Albums({spotify}) {
-  console.log("spot album: ",spotify)
-  console.log("Albums")
-    // window.onload = ()=> console.log("on load");
-     const [state, dispatch] = useDataLayerValue();
-    console.log("the state: ",state);
-    // spotify.setAccessToken(state.token);
     const [{albums,next,isMore},setAlbums] = useState({albums:[],next:0,isMore:true});
     
 
-    useEffect(()=>{
-        console.log("useEffect called, ")
-        if(state.token){
-            console.log("have token, ",next);
-            const n = next;
-            fetchMoreData()
-            
-        }else{
-          console.log("no token, ");
-        }
-        
-    },[state.token]);  
+
 
 
   const  fetchMoreData = () => {
        if(isMore){
         console.log("called")
-        const limit = 30;
         spotify.getMySavedAlbums({limit:30, offset:next}).then(
           function (newData) {
             console.log("new Data: ",newData);
@@ -48,6 +28,10 @@ function Albums({spotify}) {
         );
        }
     };
+
+    useEffect(()=>{
+      fetchMoreData()
+    },[]);  
 
 
     return (
@@ -71,7 +55,7 @@ function Albums({spotify}) {
 
                 <div  className="col-md-3" key={album.album.uri}>
                     <div className="card mb-4 shadow-sm">
-                        <img   src={album.album.images[0].url}  className="img-fluid" />
+                        <img   src={album.album.images[0].url}  className="img-fluid" alt={album.album.name}/>
                         <div className="card-body">
                         <div className="d-flex justify-content-between align-items-center">
                             <div className="btn-group">

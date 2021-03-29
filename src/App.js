@@ -1,27 +1,24 @@
 import React, { useEffect } from "react";
-import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
-import "./App.css";
-import Albums from "./Albums";
-import Login from "./Login";
-import Home from "./Home";
-import Navigation from "./Navigation";
-
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import SpotifyWebApi from "spotify-web-api-js";
+import Albums from "./Albums";
+import "./App.css";
 import { useDataLayerValue } from "./DataLayer";
-import Search from "./Search";
-import View from "./View";
-import ViewTrack from "./ViewComponents/ViewTrack";
-import ViewProducer from "./ViewComponents/ViewProducer";
-import ViewArtist from "./ViewComponents/ViewArtist";
-import ViewAlbum from "./ViewComponents/ViewAlbum";
-import { useRouteMatch } from "react-router-dom";
+import Login from "./Login";
+import Navigation from "./Navigation";
 import NewSearch from './NewSearch';
+import ViewAlbum from "./ViewComponents/ViewAlbum";
+import ViewArtist from "./ViewComponents/ViewArtist";
+import ViewProducer from "./ViewComponents/ViewProducer";
+import ViewTrack from "./ViewComponents/ViewTrack";
+
 
 const spotify = new SpotifyWebApi();
 
 
 function App() {
   const [state, dispatch] = useDataLayerValue();
+  
 
   const Logout = () => {
     localStorage.clear();
@@ -86,9 +83,6 @@ function App() {
           </Route>
           <Route exact path="/albums" >
             <Albums spotify={spotify} />
-          </Route>
-          <Route exact path="/search" >
-            <Search  spotify={spotify} />
           </Route>
           <Route path="/album/:id">
              <ViewAlbum spotify={spotify} /> 

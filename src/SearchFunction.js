@@ -1,6 +1,6 @@
+import { AutoComplete, Input } from "antd";
+import { useEffect, useState } from "react";
 import { Link, useHistory } from "react-router-dom";
-import { useState,useEffect } from "react";
-import { Input, AutoComplete, List, Avatar, Divider, Button } from "antd";
 
 //render title for search box
 const renderTitle = (title) => (
