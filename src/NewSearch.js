@@ -143,10 +143,12 @@ function NewSearch({ spotify }) {
             <ItemLayout data={artists.slice(0,numItems)} headerName="Artists" itemData={artistData} />
            
           </Row>
-          <Row>
-            <Col>
-            <Button onClick={()=>setNumItems((prev)=>{return prev+10})}>loading more</Button>
-            </Col>
+          <Row justify="center">
+            {(numItems < tracks.length || numItems < albums.length || numItems < artists.length) &&
+             <Col>
+            <Button style={{margin:30}}onClick={()=>setNumItems((prev)=>{return prev+10})}>Load more</Button>
+            </Col> }
+           
          
           </Row>
         </Content>
