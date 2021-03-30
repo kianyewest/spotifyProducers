@@ -51,15 +51,23 @@ routes.get('/callback', (req, res) => {
     console.log(body)
     const access_token = body.access_token
     const expires_in = body.expires_in
+    const refresh_token = body.refresh_token
     const uri = process.env.FRONTEND_URI || 'http://localhost:3000'
-    res.redirect(uri + '?access_token=' + access_token+"&expires_in="+expires_in)
+    res.redirect(uri + '?access_token=' + access_token+"&expires_in="+expires_in+"&refresh_token="+refresh_token)
   })
+  });
+  
+
+  routes.get('/work', function(req, res) {
+    console.log("work called")
+    res.send(JSON.stringify({hello:"yoyo"}));
   });
 
   routes.get('/refresh_token', function(req, res) {
-
+    console.log("HELLLOOOOOO\n\n\n\n\nHOOOOO")
     // requesting access token from refresh token
     var refresh_token = req.query.refresh_token;
+    console.log('token: ',refresh_token)
     var authOptions = {
       url: 'https://accounts.spotify.com/api/token',
       headers: { 'Authorization': 'Basic ' + (new Buffer(process.env.SPOTIFY_CLIENT_ID + ':' + process.env.SPOTIFY_CLIENT_SECRET).toString('base64')) },
@@ -76,7 +84,10 @@ routes.get('/callback', (req, res) => {
         res.send({
           'access_token': access_token
         });
+      }else{
+        res.send(body);
       }
+      
     });
   });
 module.exports = routes;
