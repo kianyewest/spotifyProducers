@@ -16,47 +16,64 @@ const emptyLoginState = {
   access_token: undefined,
   access_expiry: undefined,
   refresh_token: undefined,
-  length_token_valid: undefined,
+  length_token_valid: 3600,
 };
 function App() {
+  const [loading,setLoading] = useState(true);
   const [loginState, setLoginState] = useState(emptyLoginState);
   // const { access_token, access_expiry, refresh_token } = loginState;
   const [loginTimerId, setLoginTimerId] = useState();
   const Logout = () => {
     localStorage.clear();
   };
+  
+
+  const refreshToken = () =>{
+    fetch(
+      "/login/refresh_token?" +
+        new URLSearchParams({
+          refresh_token: loginState.refresh_token,
+        })
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        spotify.setAccessToken(data.access_token);
+        setLoginState((prevState) => {
+          const new_access_expiry =
+            Date.now() / 1000 + parseInt(prevState.length_token_valid); // time in seconds since epoch
+          const val = {
+            ...prevState,
+            access_token: data.access_token,
+            access_expiry: new_access_expiry,
+          };
+          
+          return val;
+        });
+})
+}
+
+const expired = loginState.access_expiry * 1000 - Date.now() <0;
+  if(expired){
+    setLoginState((prev)=>{return {...prev,access_token: undefined, access_expiry: undefined}});
+    refreshToken();
+    
+  }
 
   useEffect(() => {
     if (loginTimerId) {
       clearTimeout(loginTimerId);
     }
     const timeDiffInMilli = loginState.access_expiry * 1000 - Date.now();
-
     if (timeDiffInMilli) {
+      
       const timerId = setTimeout(() => {
-        fetch(
-          "/login/refresh_token?" +
-            new URLSearchParams({
-              refresh_token: loginState.refresh_token,
-            })
-        )
-          .then((res) => res.json())
-          .then((data) => {
-            setLoginState((prevState) => {
-              const new_access_expiry =
-                Date.now() / 1000 + parseInt(prevState.length_token_valid); // time in seconds since epoch
-              const val = {
-                ...prevState,
-                access_token: data.access_token,
-                access_expiry: new_access_expiry,
-              };
-              return val;
-            });
-          });
+        refreshToken()
+          
       }, Math.max(timeDiffInMilli, 1));
 
       setLoginTimerId(timerId);
     }
+    console.log("THIS ONE IS EIGHT")
   }, [loginState.access_token]);
 
   useEffect(() => {
@@ -88,14 +105,17 @@ function App() {
 
         localStorage.setItem("user", saveVal);
         spotify.setAccessToken(access_token);
+      }else{
+        setLoading(false);
       }
     }
+    console.log("THIS ONE DONE");
   }, []);
 
   return (
     <Router>
       {loginState.access_token && (
-        <Navigation Logout={Logout} spotify={spotify} />
+        <Navigation Logout={Logout} spotify={spotify}  />
       )}
 
       {loginState.access_token ? (
@@ -129,7 +149,7 @@ function App() {
           </Route>
         </Switch>
       ) : (
-        <Login />
+        <Login loading={loading}/>
       )}
     </Router>
   );

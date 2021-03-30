@@ -1,12 +1,11 @@
-const routes = require('express').Router();
+const routes = require("express").Router();
 const axios = require("axios");
 const config = (query) => {
   return {
     method: "get",
     url: `https://api.genius.com/${query}`,
     headers: {
-      Authorization:
-        `Bearer ${process.env.GENIUS_BEARER_TOKEN}`,
+      Authorization: `Bearer ${process.env.GENIUS_BEARER_TOKEN}`,
     },
   };
 };
@@ -15,40 +14,58 @@ var searchConfig = (query) => {
   return config(`search?q=${query}`);
 };
 
-// create a GET route
-routes.get("/search", (req, res) => {
-  // res.send({working:"its working"});
+const searchGeniusWithQuery = (query, artistName) => {
+  return new Promise(function (resolve, reject) {
+    axios(searchConfig(query))
+      .then(function (response) {
+        const filteredForArtist = response.data.response.hits.filter(
+          (result) => {
+            return result.result.primary_artist.name === artistName;
+          }
+        );
 
-  const query = req.query.firstTrack ? req.query.firstTrack + " by " + req.query.artistName : req.query.artistName;
-  console.log("hit API with: ", query);
-  axios(searchConfig(query))
-    .then(function (response) {
-      console.log(JSON.stringify(response.data));
-      const filteredForArtist = response.data.response.hits.filter((result) => {
-        return result.result.primary_artist.name === req.query.artistName;
+        if (filteredForArtist.length > 0) {
+          resolve({ noResult: false, result: filteredForArtist });
+        } else {
+          resolve({ noResult: true });
+        }
+      })
+      .catch(function (error) {
+        reject({ noResult: true, error: error });
       });
+  });
+};
 
-      if (filteredForArtist.length > 0) {
-        // const filteredForArtist = response.data.response.hits.filter((result)=>{return result.result.primary_artist.name === req.query.artistName})
-        res.send(JSON.stringify(filteredForArtist));
-      } else {
-        //try to get a response one more time. Just search for artist
-        console.log("trying again");
-        const nextQuery = req.query.firstTrack;
-        axios(searchConfig(nextQuery)).then(function (response) {
-          const filteredForArtist = response.data.response.hits.filter(
-            (result) => {
-              return result.result.primary_artist.name === req.query.artistName;
-            }
-          );
-          console.log("f", filteredForArtist);
-          res.send(JSON.stringify(filteredForArtist));
-        });
-      }
-    })
-    .catch(function (error) {
-      console.log(error);
-    });
+const searchGenius = (trackName, artistName) => {
+  return new Promise(function (resolve, reject) {
+    const query = trackName ? trackName + " by " + artistName : artistName;
+
+    searchGeniusWithQuery(query, artistName)
+      .then(function (response) {
+        console.log("resp: ", response);
+        if (response.noResult) {
+          resolve(searchGeniusWithQuery(artistName, artistName).then(
+            (response) => response,
+            (error) => error
+          ))
+        } else {
+          resolve( response);
+        }
+      })
+      .catch(function (error) {
+        reject(error);
+      });
+  });
+};
+
+//Search Genius
+routes.get("/search", (req, res) => {
+  const result = searchGenius(req.query.firstTrack, req.query.artistName).then(
+    (response) =>{res.send(JSON.stringify(response.result))},
+            (error) => res.send(JSON.stringify(error))
+  );
+  
+  
 });
 
 var songConfig = (id) => {
@@ -89,26 +106,33 @@ routes.get("/artist", (req, res) => {
     });
 });
 
-var artistSongConfig = (id,pageNum) => {
-  return config(`artists/${id}/songs?per_page=50&page=${pageNum}&sort=popularity`);
+var artistSongConfig = (id, pageNum) => {
+  return config(
+    `artists/${id}/songs?per_page=50&page=${pageNum}&sort=popularity`
+  );
 };
 
 routes.get("/artist/songs", (req, res) => {
   const id = req.query.artistId;
   var pageNum = 1;
-  if(typeof(req.query.pageNum)!=='undefined'){
-    pageNum = req.query.pageNum
+  if (typeof req.query.pageNum !== "undefined") {
+    pageNum = req.query.pageNum;
   }
   console.log("hit API with artist id: ", id);
-  axios(artistSongConfig(id,pageNum))
-      .then(function (response) {
-        res.send(JSON.stringify(response.data.response));
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
-  
+  axios(artistSongConfig(id, pageNum))
+    .then(function (response) {
+      res.send(JSON.stringify(response.data.response));
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
 });
 
+routes.get("/getProducers", (req, res) => {
+  console.log("req.query", req.query);
+  const spotifyArtistId = req.query.spotifyArtistId;
+  const spotifyAlbumId = req.query.spotifyAlbumId;
+  const spotifySongId = req.query.spotifySongId;
+});
 
 module.exports = routes;

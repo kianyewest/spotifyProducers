@@ -48,7 +48,6 @@ routes.get('/callback', (req, res) => {
     json: true
   }
   request.post(authOptions, function(error, response, body) {
-    console.log(body)
     const access_token = body.access_token
     const expires_in = body.expires_in
     const refresh_token = body.refresh_token
@@ -58,16 +57,9 @@ routes.get('/callback', (req, res) => {
   });
   
 
-  routes.get('/work', function(req, res) {
-    console.log("work called")
-    res.send(JSON.stringify({hello:"yoyo"}));
-  });
-
   routes.get('/refresh_token', function(req, res) {
-    console.log("HELLLOOOOOO\n\n\n\n\nHOOOOO")
     // requesting access token from refresh token
     var refresh_token = req.query.refresh_token;
-    console.log('token: ',refresh_token)
     var authOptions = {
       url: 'https://accounts.spotify.com/api/token',
       headers: { 'Authorization': 'Basic ' + (new Buffer(process.env.SPOTIFY_CLIENT_ID + ':' + process.env.SPOTIFY_CLIENT_SECRET).toString('base64')) },

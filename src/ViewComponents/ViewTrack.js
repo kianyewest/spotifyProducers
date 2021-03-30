@@ -11,6 +11,7 @@ function ViewTrack({ spotify }) {
   const match = useRouteMatch();
 
   useEffect(() => {
+    console.log("token: ",spotify.getAccessToken())
     spotify.getTrack(match.params.id).then(
       function (data) {
         console.log("spotify track information", data);
