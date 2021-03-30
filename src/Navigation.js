@@ -1,10 +1,9 @@
+// import { Layout } from 'antd';
 import React from "react";
 import { Button, Nav, Navbar } from "react-bootstrap";
 import { IndexLinkContainer } from "react-router-bootstrap";
 import SearchFunction from "./SearchFunction";
-import { Layout, Menu, Breadcrumb } from 'antd';
-import { Link, useLocation } from "react-router-dom";
-const { Header, Content, Footer } = Layout;
+// const { Header, Content, Footer } = Layout;
 const Navigation = ({ Logout, spotify }) => {
   return (
     // <Header>

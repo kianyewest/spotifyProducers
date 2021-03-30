@@ -40,7 +40,7 @@ function ViewAlbum({ spotify }) {
     return (
       <Container>
         <Row>
-          <Col className="text-center" sm={4} mx-auto>
+          <Col className="text-center" sm={4} >
             <Image src={spotifyResults.images[1].url} rounded />
           </Col>
           <Col>
@@ -51,7 +51,7 @@ function ViewAlbum({ spotify }) {
         <Row>
           <Col sm={4}>
             <ListGroup>
-              {spotifyResults.tracks.items.map((track) => showTrack(track))}
+              {spotifyResults.tracks.items.map((track) => <ShowTrack track={track} key={track.id}/>)}
             </ListGroup>
           </Col>
         </Row>
@@ -81,7 +81,7 @@ function ViewAlbum({ spotify }) {
 
 export default ViewAlbum;
 
-const showTrack = (track) => {
+const ShowTrack = ({track}) => {
   return (
     <Link to={{ pathname: `/track/${track.id}` }}>
       {/* /Get smallest image possible, to reduce loading time */}
@@ -101,7 +101,7 @@ const showTrack = (track) => {
 const displayArtistsNames = (artists) => {
   return artists.map((artist, index) => {
     return (
-      <Link to={{ pathname: `/artist/${artist.id}` }}>
+      <Link to={{ pathname: `/artist/${artist.id}` }} key={artist.id}>
         {index === artists.length - 1 ? artist.name : artist.name + ", "}
       </Link>
     );

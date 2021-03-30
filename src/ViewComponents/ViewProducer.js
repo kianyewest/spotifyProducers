@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { useRouteMatch } from "react-router-dom";
-import {
-  Container,
-  Spinner,
-  ListGroup,
-  Row,
-  Col,
-  Accordion,
-  Card,
-  Image,
-  Button,
-} from "react-bootstrap";
-import { Link, useLocation } from "react-router-dom";
 import _ from "lodash";
+import React, { useEffect, useState } from "react";
+import {
+  Accordion,
+
+
+  Button, Card, Col, Container,
+
+  ListGroup,
+  Row, Spinner
+} from "react-bootstrap";
+import { Link, useLocation, useRouteMatch } from "react-router-dom";
 
 
 function ViewProducer({ spotify }) {

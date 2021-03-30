@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import SpotifyWebApi from "spotify-web-api-js";
 import Albums from "./Albums";
 import "./App.css";
-import { useDataLayerValue } from "./DataLayer";
 import Login from "./Login";
 import Navigation from "./Navigation";
 import NewSearch from "./NewSearch";
@@ -20,7 +19,6 @@ const emptyLoginState = {
   length_token_valid: undefined,
 };
 function App() {
-  const [state, dispatch] = useDataLayerValue();
   const [loginState, setLoginState] = useState(emptyLoginState);
   // const { access_token, access_expiry, refresh_token } = loginState;
   const [loginTimerId, setLoginTimerId] = useState();

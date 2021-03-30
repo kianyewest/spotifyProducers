@@ -65,7 +65,7 @@ function ViewTrack({ spotify }) {
         {geniusResults.producer_artists.map((prod) => {
           // console.log("prod: ",prod)
           return (
-            <h3>
+            <h3 key={prod.id}>
               <Link
                 to={{
                   pathname: `/producer/${prod.id}`,
