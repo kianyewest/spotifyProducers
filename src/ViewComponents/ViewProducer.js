@@ -245,7 +245,7 @@ function ViewProducer({ spotify }) {
     )
       .then((res) => res.json())
       .then((data) => {
-        // console.log("genius Artist info: ", data);
+        console.log("genius Artist info: ", data);
         setArtistInfo(data);
       });
 
@@ -261,7 +261,7 @@ function ViewProducer({ spotify }) {
       geniusResults.tracks,
       (track) => track.primary_artist.id
     );
-    // console.log("grouped: ", groupArtist);
+    console.log("grouped: ", groupArtist);
     const diffArtist = geniusResults.tracks.filter(
       (track) => track.primary_artist.id !== geniusArtistId
     );

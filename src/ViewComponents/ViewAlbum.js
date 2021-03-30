@@ -26,7 +26,7 @@ function ViewAlbum({ spotify }) {
         )
           .then((res) => res.json())
           .then((data) => {
-            console.log("data: ", data);
+            console.log("album data: ", data);
             setGeniusResults(data.response);
           });
       },

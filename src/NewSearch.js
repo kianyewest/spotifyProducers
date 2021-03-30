@@ -10,7 +10,7 @@ import {
   Button,
 } from "antd";
 import { UserOutlined } from "@ant-design/icons";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation,useHistory } from "react-router-dom";
 import SearchFunction from "./SearchFunction";
 const { Content } = Layout;
 
@@ -23,7 +23,7 @@ const emptyState = {
 function NewSearch({ spotify }) {
   const [{ tracks, albums, artists }, setData] = useState(emptyState);
   const [numItems, setNumItems] = useState(5);
-
+  const history = useHistory();
   // Specific data link for each type
   const trackData = (track) => {
     return {
@@ -57,64 +57,61 @@ function NewSearch({ spotify }) {
 
   //how to lay items out
   function ItemLayout({ data, headerName, itemData }) {
+    const renderItem = (item) => {
+      const { link, imgArr, name, description, id } = itemData(item);
+      return (
+        <Link to={{ pathname: link }}>
+          <List.Item
+            extra={
+                <Button size="large" type="primary" onClick={(e)=>{e.preventDefault();history.push(`/generate/${id}`)}}>
+                  Generate Playlist
+                </Button>       
+            }
+          >
+            <List.Item.Meta
+              avatar={
+                imgArr.length > 0 ? (
+                  <Avatar
+                    shape="square"
+                    size={64}
+                    src={imgArr[imgArr.length - 1].url}
+                  />
+                ) : (
+                  <Avatar
+                    shape="square"
+                    size={64}
+                    icon={<UserOutlined />}
+                  />
+                )
+              }
+              title={name}
+              description={description}
+            />
+          </List.Item>
+        </Link>
+      );
+            }
+
     return (
       <Col span={rowLength}>
         <List
           loading={false}
-          loadMore={() => {
-            return <div>hi</div>;
-          }}
           size="large"
           header={
             <Divider orientation="left" style={{ padding: 0 }}>
               {headerName}
             </Divider>
           }
-          itemLayout="horizontal"
+          // itemLayout="horizontal"
           dataSource={data}
-          renderItem={(item) => {
-            const { link, imgArr, name, description, id } = itemData(item);
-            return (
-              <Link to={{ pathname: link }}>
-                <List.Item
-                  extra={
-                    <Link to={{ pathname: `/generate/${id}` }}>
-                      <Button size="large" type="primary">
-                        Generate Playlist
-                      </Button>
-                    </Link>
-                  }
-                >
-                  <List.Item.Meta
-                    avatar={
-                      imgArr.length > 0 ? (
-                        <Avatar
-                          shape="square"
-                          size={64}
-                          src={imgArr[imgArr.length - 1].url}
-                        />
-                      ) : (
-                        <Avatar
-                          shape="square"
-                          size={64}
-                          icon={<UserOutlined />}
-                        />
-                      )
-                    }
-                    title={name}
-                    description={description}
-                  />
-                </List.Item>
-              </Link>
-            );
-          }}
+          renderItem={renderItem}
         />
+ 
       </Col>
     );
   }
 
   const location = useLocation();
-  console.log(location);
   const rowLength = 7;
   return (
     <>
@@ -136,7 +133,7 @@ function NewSearch({ spotify }) {
             </Col>
           </Row>
           <Row justify="space-around">
-            <ItemLayout
+             <ItemLayout
               data={tracks.slice(0, numItems)}
               headerName="Songs"
               itemData={trackData}

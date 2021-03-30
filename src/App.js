@@ -106,7 +106,7 @@ function App() {
             <NewSearch spotify={spotify} />
           </Route>
           <Route exact path="/about">
-            <About />
+            <h1>About page</h1>
           </Route>
           <Route exact path="/albums">
             <Albums spotify={spotify} />
@@ -137,8 +137,4 @@ function App() {
   );
 }
 
-function About() {
-  const [state, dispatch] = useDataLayerValue();
-  return <>About: {JSON.stringify(state.user, null, 4)}</>;
-}
 export default App;
