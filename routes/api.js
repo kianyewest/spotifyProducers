@@ -1,5 +1,8 @@
 const routes = require("express").Router();
 const axios = require("axios");
+const SpotifyWebApi = require("spotify-web-api-node");
+const spotifyApi = new SpotifyWebApi();
+
 const config = (query) => {
   return {
     method: "get",
@@ -37,6 +40,7 @@ const searchGeniusWithQuery = (query, artistName) => {
 };
 
 const searchGenius = (trackName, artistName) => {
+  console.log("trying to search for: ", trackName, artistName);
   return new Promise(function (resolve, reject) {
     const query = trackName ? trackName + " by " + artistName : artistName;
 
@@ -44,12 +48,14 @@ const searchGenius = (trackName, artistName) => {
       .then(function (response) {
         console.log("resp: ", response);
         if (response.noResult) {
-          resolve(searchGeniusWithQuery(artistName, artistName).then(
-            (response) => response,
-            (error) => error
-          ))
+          resolve(
+            searchGeniusWithQuery(artistName, artistName).then(
+              (response) => response,
+              (error) => error
+            )
+          );
         } else {
-          resolve( response);
+          resolve(response);
         }
       })
       .catch(function (error) {
@@ -61,11 +67,12 @@ const searchGenius = (trackName, artistName) => {
 //Search Genius
 routes.get("/search", (req, res) => {
   const result = searchGenius(req.query.firstTrack, req.query.artistName).then(
-    (response) =>{res.send(JSON.stringify(response.result))},
-            (error) => res.send(JSON.stringify(error))
+    (response) => {
+      console.log("sending back:", response);
+      res.send(JSON.stringify(response));
+    },
+    (error) => res.send(JSON.stringify(error))
   );
-  
-  
 });
 
 var songConfig = (id) => {
@@ -96,9 +103,6 @@ routes.get("/artist", (req, res) => {
   console.log("hit API with artist id: ", id);
   axios(artistConfig(id))
     .then(function (response) {
-      // console.log("res: ",response.data)
-      // console.log("hm: ",response.data.response.artist)
-      // res.send(JSON.stringify({x:4,y:3}))
       res.send(JSON.stringify(response.data.response.artist));
     })
     .catch(function (error) {
@@ -128,11 +132,58 @@ routes.get("/artist/songs", (req, res) => {
     });
 });
 
-routes.get("/getProducers", (req, res) => {
-  console.log("req.query", req.query);
+function ConvertProducers(arrGeniusProducer) {
+  // Create an array of promises
+  var promises = [];
+  arrGeniusProducer.map((producer) => {
+    promises.push(
+      new Promise(function (resolve, reject) {
+        console.log("prod: ", producer);
+        const id = producer.id;
+        axios(artistConfig(id))
+          .then(function (response) {
+            resolve(response.data.response.artist);
+          })
+          .catch(function (error) {
+            reject(error);
+          });
+      })
+    );
+  });
+
+  // Return a Promise.all promise of the array
+  return Promise.all(promises);
+}
+
+routes.get("/getProducers", async (req, res) => {
   const spotifyArtistId = req.query.spotifyArtistId;
   const spotifyAlbumId = req.query.spotifyAlbumId;
-  const spotifySongId = req.query.spotifySongId;
+  const spotifyTrackId = req.query.spotifyTrackId;
+  const spotifyAccessToken = req.query.spotifyAccessToken;
+  spotifyApi.setAccessToken(spotifyAccessToken);
+  try {
+    if (spotifyTrackId) {
+      //get Track from spotify
+      const spotifyData = await spotifyApi.getTrack(spotifyTrackId);
+      //search genius for found track
+      geniusData = await searchGenius(spotifyData.body.name, spotifyData.body.artists[0].name);
+      if (geniusData.result.length > 0) {
+        const geniusId = geniusData.result[0].result.id;
+        //get genius producer id from found result
+        const producers = await axios(songConfig(geniusId))
+        const song = producers.data.response.song;
+        //get producers info from id's
+        const data = await ConvertProducers(song.producer_artists)
+        console.log("data was: ", data);
+        res.send(JSON.stringify(data));
+      }else{
+        res.send(JSON.stringify(geniusData));
+      }
+    }
+  } catch (error) {
+    console.log("some error: ", error);
+    res.send(JSON.stringify(error));
+  }
 });
 
 module.exports = routes;

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import SpotifyWebApi from "spotify-web-api-js";
 import Albums from "./Albums";
 import "./App.css";
+import Generate from "./Generate";
 import Login from "./Login";
 import Navigation from "./Navigation";
 import NewSearch from "./NewSearch";
@@ -27,6 +28,21 @@ function App() {
     localStorage.clear();
   };
   
+  const saveData = (access_token,new_access_expiry,refresh_token,length_token_valid)=>{
+    const loginData = {
+      access_token: access_token,
+      access_expiry: new_access_expiry,
+      refresh_token: refresh_token,
+      length_token_valid: length_token_valid,
+    };
+    setLoginState((prevState) => {
+      return { ...prevState, ...loginData };
+    });
+    const saveVal = JSON.stringify(loginData);
+
+    localStorage.setItem("user", saveVal);
+    
+  }
 
   const refreshToken = () =>{
     fetch(
@@ -37,18 +53,20 @@ function App() {
     )
       .then((res) => res.json())
       .then((data) => {
+        const new_access_expiry =
+            Date.now() / 1000 + parseInt(loginState.length_token_valid); // time in seconds since epoch
         spotify.setAccessToken(data.access_token);
-        setLoginState((prevState) => {
-          const new_access_expiry =
-            Date.now() / 1000 + parseInt(prevState.length_token_valid); // time in seconds since epoch
-          const val = {
-            ...prevState,
-            access_token: data.access_token,
-            access_expiry: new_access_expiry,
-          };
+        saveData(data.access_token,new_access_expiry,loginState.refresh_token,loginState.length_token_valid)
+        // setLoginState((prevState) => {
           
-          return val;
-        });
+        //   const val = {
+        //     ...prevState,
+        //     access_token: data.access_token,
+        //     access_expiry: new_access_expiry,
+        //   };
+          
+        //   return val;
+        // });
 })
 }
 
@@ -58,7 +76,7 @@ const expired = loginState.access_expiry * 1000 - Date.now() <0;
     refreshToken();
     
   }
-
+  
   useEffect(() => {
     if (loginTimerId) {
       clearTimeout(loginTimerId);
@@ -73,9 +91,9 @@ const expired = loginState.access_expiry * 1000 - Date.now() <0;
 
       setLoginTimerId(timerId);
     }
-    console.log("THIS ONE IS EIGHT")
   }, [loginState.access_token]);
 
+  
   useEffect(() => {
     const storage = localStorage.getItem("user");
     if (loginState.access_token) {
@@ -92,18 +110,19 @@ const expired = loginState.access_expiry * 1000 - Date.now() <0;
       const refresh_token = urlParams.get("refresh_token");
       if (access_token) {
         const new_access_expiry = Date.now() / 1000 + parseInt(10); // time in seconds since epoch
-        const loginData = {
-          access_token: access_token,
-          access_expiry: new_access_expiry,
-          refresh_token: refresh_token,
-          length_token_valid: expires_in,
-        };
-        setLoginState((prevState) => {
-          return { ...prevState, ...loginData };
-        });
-        const saveVal = JSON.stringify(loginData);
+        // const loginData = {
+        //   access_token: access_token,
+        //   access_expiry: new_access_expiry,
+        //   refresh_token: refresh_token,
+        //   length_token_valid: expires_in,
+        // };
+        saveData(access_token,new_access_expiry,refresh_token,expires_in)
+        // setLoginState((prevState) => {
+        //   return { ...prevState, ...loginData };
+        // });
+        // const saveVal = JSON.stringify(loginData);
 
-        localStorage.setItem("user", saveVal);
+        // localStorage.setItem("user", saveVal);
         spotify.setAccessToken(access_token);
       }else{
         setLoading(false);
@@ -141,8 +160,8 @@ const expired = loginState.access_expiry * 1000 - Date.now() <0;
           <Route path="/track/:id">
             <ViewTrack spotify={spotify} />
           </Route>
-          <Route path="/callback">
-            <h1>Callback</h1>
+          <Route path="/generate/:type/:id">
+            <Generate spotify={spotify}/>
           </Route>
           <Route path="/">
             <h1>This is not a url :(</h1>

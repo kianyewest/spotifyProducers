@@ -30,15 +30,15 @@ function ViewTrack({ spotify }) {
           .then((res) => res.json())
           .then((data) => {
             console.log("track search result from genius: ", data);
-            if (data.length === 0) {
+            if (data.result.length === 0) {
               setNoGeniusResult(true);
             } else {
               setNoGeniusResult(false);
-              // console.log("data", data[0].result.id);
+              console.log("data", data.result[0].result.id);
               fetch(
                 "/api/song?" +
                   new URLSearchParams({
-                    id: data[0].result.id,
+                    id: data.result[0].result.id,
                   })
               )
                 .then((res) => res.json())

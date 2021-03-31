@@ -63,7 +63,7 @@ function NewSearch({ spotify }) {
         <Link to={{ pathname: link }}>
           <List.Item
             extra={
-                <Button size="large" type="primary" onClick={(e)=>{e.preventDefault();history.push(`/generate/${id}`)}}>
+                <Button size="large" type="primary" onClick={(e)=>{e.preventDefault();history.push(`/generate${link}`)}}> 
                   Generate Playlist
                 </Button>       
             }
