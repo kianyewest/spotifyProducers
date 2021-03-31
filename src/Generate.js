@@ -33,6 +33,12 @@ function Generate({spotify}) {
       .then((res) => res.json())
       .then((data) => {
         console.log("got data", data);
+        console.log("afterrrrr data", data.filter((song)=>{
+          // console.log("song.media",song)
+          
+          return song.media && song.media.length>0 && song.media.filter((p)=>{console.log("p",p);return p.provider==="spotify"}).length>0
+        }))
+        console.log("after data", data);
         setDisplayData(JSON.stringify(data, undefined, 2));
         setLoading(false);
       });
