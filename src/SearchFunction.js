@@ -37,15 +37,21 @@ const renderItem = (id, title, count, category) => ({
 const handleSearch = (value, spotify, setOptions, setData, emptyDataState) => {
   if (value) {
     spotify.search(value, ["track", "album", "artist"]).then(
-      function (data) {
-        if (!data) {
+      function (result) {
+        if (!result) {
           setOptions([]);
           if (setData) {
             setData(emptyDataState);
           }
         }
+        
+        const data = {}
+        for (const category of Object.keys(result)) {
+          data[category] = result[category].items.filter((val)=>val!=null)
+        }
+       
         const options = Object.keys(data).map((category) => {
-          const options = data[category].items.slice(0, 2).map((item) => {
+          const options = data[category].slice(0, 2).map((item) => {
             return renderItem(
               item.id,
               item.name,
@@ -60,7 +66,7 @@ const handleSearch = (value, spotify, setOptions, setData, emptyDataState) => {
         if (setData) {
           for (const category of Object.keys(data)) {
             setData((prev) => {
-              return { ...prev, [category]: data[category].items };
+              return { ...prev, [category]: data[category] };
             });
           }
         }
