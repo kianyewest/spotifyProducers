@@ -133,28 +133,10 @@ routes.get("/artist/songs", (req, res) => {
     });
 });
 
-function ConvertProducers(arrGeniusProducer) {
-  // Create an array of promises
-  var promises = [];
-  arrGeniusProducer.map((producer) => {
-    promises.push(
-      new Promise(function (resolve, reject) {
-        const id = producer.id;
-        axios(artistConfig(id))
-          .then(function (response) {
-            resolve(response.data.response.artist);
-          })
-          .catch(function (error) {
-            reject(error);
-          });
-      })
-    );
-  });
-
-  // Return a Promise.all promise of the array
-  return Promise.all(promises);
-}
-
+/**
+ * Returns promise of songs from genius artist
+ * @param {number} artistId  genius artist ID
+ */
 function getSongs(artistId) {
   return new Promise(async function (resolve, reject) {
     try {
@@ -178,72 +160,118 @@ function getSongs(artistId) {
   });
 }
 
-const getSongsByProducers = (spotifyAccessToken, spotifyTrackId) => {
-  return new Promise(async function (resolve, reject) {
-    spotifyApi.setAccessToken(spotifyAccessToken);
-    try {
-      if (spotifyTrackId) {
-        //get Track from spotify
-        const spotifyData = await spotifyApi.getTrack(spotifyTrackId);
-        //search genius for found track
-        geniusData = await searchGenius(
-          spotifyData.body.name,
-          spotifyData.body.artists[0].name
-        );
-
-        if (geniusData.result.length > 0) {
-          //if we found a track, get the first one, and use song ID to get more info
-          const geniusId = geniusData.result[0].result.id;
-          const fullSongData = await axios(songConfig(geniusId));
-          const originalSong = fullSongData.data.response.song;
-          //get producers info from id's
-          const producersId = await ConvertProducers(originalSong.producer_artists);
-          //get all songs by producer
-          var producersSongs = [];
-          producersId.map((producer) => {
-            producersSongs.push(
-              new Promise(async function (resolve, reject) {
-                try{
-                const songs = await getSongs(producer.id)
-                resolve({
-                  
-                  producer: producer,
-                  songs: songs,
-                })
-                }catch(error){
-                  reject(error);
-                }
-            }));
+/**
+ * Returns an array of producers and their respective songs
+ * @param {array} producers
+ */
+const getSongsByProducers = async (producers) => {
+  //get all songs by producers
+  var producersSongs = [];
+  producers.map((producer) => {
+    producersSongs.push(
+      new Promise(async function (resolve, reject) {
+        try {
+          const songs = await getSongs(producer.id);
+          resolve({
+            producer: producer,
+            songs: songs,
           });
-
-          const result = await Promise.all(producersSongs);
-          resolve({originalSong:originalSong,results:result});
-
-         
-        } else {
-          reject(JSON.stringify(geniusData));
+        } catch (error) {
+          reject(error);
         }
-      } else {
-        reject(JSON.stringify({ result: "type not supported yet" }));
-      }
-    } catch (error) {
-      reject(JSON.stringify(error));
-    }
+      })
+    );
   });
+
+  return Promise.all(producersSongs);
 };
+
+/**
+ * Returns a promise containing songs by the producers of the given track
+ * @param {string} spotifyAccessToken
+ * @param {string} spotifyTrackId
+ */
+const doTrack = async (spotifyAccessToken, spotifyTrackId) => {
+  spotifyApi.setAccessToken(spotifyAccessToken);
+
+  //get Track from spotify
+  const spotifyData = await spotifyApi.getTrack(spotifyTrackId);
+  //search genius for found track
+  geniusData = await searchGenius(
+    spotifyData.body.name,
+    spotifyData.body.artists[0].name
+  );
+  const trackId = geniusData.result[0].result.id;
+
+  //get producers
+  const fullSongData = await axios(songConfig(trackId));
+  const originalSong = fullSongData.data.response.song;
+  const originalArtistGeniusId = originalSong.primary_artist.id;
+  const producers = originalSong.producer_artists;
+
+  const songs = await getSongsByProducers(producers);
+  return {
+    originalArtistGeniusId: originalArtistGeniusId,
+    results: songs,
+  };
+  // return getProducers(geniusData.result.length > 0 ? geniusData.result[0].result.id:undefined);
+};
+
+/**
+ * Returns a promise containing songs by the producers of the given album
+ * @param {string} spotifyAccessToken
+ * @param {string} spotifyAlbumId
+ */
+const doAlbum = async (spotifyAccessToken, spotifyAlbumId) => {
+  spotifyApi.setAccessToken(spotifyAccessToken);
+
+  //get Track from spotify
+  const spotifyData = await spotifyApi.getAlbum(spotifyAlbumId);
+  const firstTrackName = spotifyData.body.tracks.items[0].name;
+  //search genius for found track
+  geniusData = await searchGenius(
+    firstTrackName,
+    spotifyData.body.artists[0].name
+  );
+  const trackId = geniusData.result[0].result.id;
+
+  const fullSongData = await axios(songConfig(trackId));
+  const originalSong = fullSongData.data.response.song;
+  const originalArtistGeniusId = originalSong.primary_artist.id;
+
+  const albumData = await axios(config(`albums/${originalSong.album.id}`));
+  const producers = albumData.data.response.album.song_performances.find(
+    (preformer) => {
+      return preformer.label === "Producers";
+    }
+  ).artists;
+
+  const songs = await getSongsByProducers(producers);
+  return {
+    originalArtistGeniusId: originalArtistGeniusId,
+    results: songs,
+  };
+};
+
 routes.get("/getProducers", async (req, res) => {
   const spotifyArtistId = req.query.spotifyArtistId;
   const spotifyAlbumId = req.query.spotifyAlbumId;
   const spotifyTrackId = req.query.spotifyTrackId;
   const spotifyAccessToken = req.query.spotifyAccessToken;
   try {
-    const data = await getSongsByProducers(spotifyAccessToken, spotifyTrackId);
-     //filter the primary artist from producer results
-     songsByOtherArtists = data.results.map((producerData) => {
+    var data = {};
+    if (spotifyTrackId) {
+      data = await doTrack(spotifyAccessToken, spotifyTrackId);
+    } else if (spotifyAlbumId) {
+      data = await doAlbum(spotifyAccessToken, spotifyAlbumId);
+    }
+
+    //filter the primary artist from producer results
+    songsByOtherArtists = data.results.map((producerData) => {
       const filteredData = producerData.songs.filter(
         (localSong) =>
-           localSong.primary_artist.id !== data.originalSong.primary_artist.id
-      )
+          localSong.primary_artist.id !== data.originalArtistGeniusId
+      );
       return {
         producer: producerData.producer,
         songs: filteredData,
