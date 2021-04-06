@@ -17,6 +17,8 @@ let redirect_uri =
     "user-library-read",
     "user-read-email",
     "user-read-private",
+    "playlist-modify-public",
+    "playlist-modify-private",
   ];
 
 routes.get('/', (req, res) => {
