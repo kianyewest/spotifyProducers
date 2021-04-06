@@ -37,3 +37,12 @@ background: linear-gradient(to bottom, #38ef7d, #11998e); /*W3C, IE 10+/ Edge, F
   padding: 6px;
   margin:12px;
 }
+
+.ant-card-body{
+  padding:0px;
+}
+
+.image-container {
+  max-height:50px;
+  overflow:hidden;
+}
