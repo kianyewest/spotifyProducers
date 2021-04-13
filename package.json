@@ -4,7 +4,14 @@
   "description": "manage client and server",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "client-install"  : "cd client && npm install",
+    "server-install"  : "cd server && npm install",
+    "server": "cd server &&  node server.js",
+    "client": "npm start --prefix client",
+    "install-all-deps": "concurrently \"npm run server-install\" \"npm run client-install\"",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"npm run client\" \"npm run server\""
+
   },
   "repository": {
     "type": "git",
@@ -15,5 +22,8 @@
   "bugs": {
     "url": "https://github.com/kianyewest/spotifyProducers/issues"
   },
-  "homepage": "https://github.com/kianyewest/spotifyProducers#readme"
+  "homepage": "https://github.com/kianyewest/spotifyProducers#readme",
+  "devDependencies": {
+    "concurrently": "^6.0.2"
+  }
 }
