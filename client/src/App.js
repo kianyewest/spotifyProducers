@@ -45,6 +45,7 @@ function App() {
   }
 
   const refreshToken = () =>{
+    console.log("attempting to refresh")
     fetch(
       "/login/refresh_token?" +
         new URLSearchParams({
@@ -72,18 +73,20 @@ function App() {
 
 const expired = loginState.access_expiry * 1000 - Date.now() <0;
   if(expired){
+    console.log("was expired")
     setLoginState((prev)=>{return {...prev,access_token: undefined, access_expiry: undefined}});
     refreshToken();
     
   }
   
   useEffect(() => {
+    console.log("was timer")
     if (loginTimerId) {
       clearTimeout(loginTimerId);
     }
     const timeDiffInMilli = loginState.access_expiry * 1000 - Date.now();
     if (timeDiffInMilli) {
-      
+      console.log("need to refresh ",timeDiffInMilli)
       const timerId = setTimeout(() => {
         refreshToken()
           
@@ -95,14 +98,19 @@ const expired = loginState.access_expiry * 1000 - Date.now() <0;
 
   
   useEffect(() => {
+    console.log("up top")
     const storage = localStorage.getItem("user");
     if (loginState.access_token) {
+      console.log("hereB")
       spotify.setAccessToken(loginState.access_token);
     } else if (storage) {
+      console.log("hereA")
       const loginData = JSON.parse(storage);
+      console.log("loginData: ",loginData)
       setLoginState(loginData);
       spotify.setAccessToken(loginData.access_token);
     } else {
+      console.log("here")
       const queryString = window.location.search;
       const urlParams = new URLSearchParams(queryString);
       const access_token = urlParams.get("access_token");

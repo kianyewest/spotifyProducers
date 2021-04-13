@@ -69,7 +69,7 @@ function Generate({ spotify }) {
         const uniqueSongs = [...new Map(allSongs.map(item => [item.id, item])).values()]
 
         uniqueSongs.slice(0, defaultNumberPlaylistItems).forEach((song) => {getSpotifyTrackFromGeniusTrack(song)});
-        
+        console.log("data: ",data)
         
         setAllSongs(uniqueSongs);
           
@@ -184,7 +184,7 @@ function Generate({ spotify }) {
         },
       },
     ];
-    // console.log(allSongs);
+
 
     const dataSource = allSongs
       .slice(0, defaultNumberPlaylistItems)

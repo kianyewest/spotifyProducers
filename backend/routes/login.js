@@ -22,7 +22,6 @@ let redirect_uri =
   ];
 
 routes.get('/', (req, res) => {
-  console.log("at login")
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -33,7 +32,6 @@ routes.get('/', (req, res) => {
 });
 
 routes.get('/callback', (req, res) => {
-  console.log("at login callback")
   let code = req.query.code || null
   let authOptions = {
     url: 'https://accounts.spotify.com/api/token',

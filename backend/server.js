@@ -1,15 +1,16 @@
-require('dotenv').config()
-const app = require('express')();
+
+const express = require('express');
+const app = express();
+const path = require('path');
 const apiRoute = require('./routes/api')
 const loginRoute = require('./routes/login')
+const envPath = path.join(__dirname, '..','.env');
+require('dotenv').config({path:envPath})
 
 //  Connect all our routes to our application
 app.use('/api', apiRoute);
 app.use('/login', loginRoute);
 
-app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Hello ur at \"/\" nothing here' });
-});
 
 const port = process.env.PORT || 8080;
 
