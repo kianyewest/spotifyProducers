@@ -286,7 +286,13 @@ function Generate({ spotify }) {
 
   const matchExactArtist = (spotifyResult, geniusArtistName) => {
     return spotifyResult.filter((track) => {
+      if(track === null){
+        return false;
+      }
       const spotifyArtist = track.artists[0].name.normalize("NFKD");
+      
+      
+      
       //normalise to so that characters such as space and no-break space will match each other
       // console.log(track.name,spotifyArtist,geniusArtistName,spotifyArtist.localeCompare(geniusArtistName, 'en', { sensitivity: 'base' })===0);
       return (
@@ -302,6 +308,9 @@ function Generate({ spotify }) {
     //try seeing if artist is within genius artist name i.e "Drake" within the artist name of "Drake,Kanye west, Lil Wayne"
     //unsure of why genius would store an artist as a list of artists they already have in there database with no reference to them :(
     return spotifyResult.filter((track) => {
+      if(track === null){
+        return false;
+      }
       const spotifyArtist = track.artists[0].name
         .normalize("NFKD")
         .toUpperCase();
@@ -310,8 +319,8 @@ function Generate({ spotify }) {
   };
 
   const processResults = (data, geniusTrack) => {
-    // console.log(data)
-    // console.log("geniusTrack.primary_artist",geniusTrack.primary_artist)
+    console.log("data is: ",data)
+    console.log("geniusTrack.primary_artist",geniusTrack.primary_artist)
     //exact match
     const geniusArtistName = geniusTrack.primary_artist.name
       .normalize("NFKD")
@@ -363,6 +372,7 @@ function Generate({ spotify }) {
     //if that fails it reduces the title to a bare form and searches again
     spotify.search(cleanQuery, ["track"], { limit: 10 }).then(
       function (data) {
+        console.log("first data: ",data);
         if (!processResults(data, geniusTrack)) {
           //try again with higher limit
           spotify.search(query, ["track"], { limit: 50 }).then(
@@ -385,7 +395,7 @@ function Generate({ spotify }) {
                         // console.log("newQuery", newQuery);
                         spotify.search(newQuery, ["track"], { limit: 50 }).then(
                           function (data) {
-                            // console.log("result from reduced search: ", data);
+                            console.log("result from reduced search: ", data);
                             processResults(data, geniusTrack);
                           },
                           function (err) {
