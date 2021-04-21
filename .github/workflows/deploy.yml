@@ -23,8 +23,7 @@ jobs:
           working-directory: /home/ubuntu/spotifyProducers
           command: ls -al
           comment: Hello world!
-          command: touch someRandomFileMade
-
+          
       # Catch SSM outputs
       - name: Get the outputs
         run: echo "The Command id is ${{ steps.ssm.outputs.command-id }}"
