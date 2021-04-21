@@ -19,8 +19,9 @@ function ViewTrack({ spotify }) {
         const spotifyArtistName = data.artists[0].name;
         const spotifyAlbumName = data.album.name;
         const spotifyTrackName = data.name;
+        console.log('process.env.BACKEND_LINK: ',process.env.BACKEND_LINK)
         fetch(
-          "/api/search?" +
+          process.env.REACT_APP_BACKEND_LINK+"/api/search?" +
             new URLSearchParams({
               artistName: spotifyArtistName,
               albumName: spotifyAlbumName,
@@ -36,7 +37,7 @@ function ViewTrack({ spotify }) {
               setNoGeniusResult(false);
               console.log("data", data.result[0].result.id);
               fetch(
-                "/api/song?" +
+                process.env.REACT_APP_BACKEND_LINK+"/api/song?" +
                   new URLSearchParams({
                     id: data.result[0].result.id,
                   })

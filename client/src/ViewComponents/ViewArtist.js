@@ -14,7 +14,7 @@ function ViewArtist({spotify}) {
               console.log('Artists information', data);
               setSpotifyResults(data);
               fetch(
-                "/api/search?" +
+                process.env.REACT_APP_BACKEND_LINK+"/api/search?" +
                   new URLSearchParams({
                     artistName: data.name,
                     // albumName: data.name,

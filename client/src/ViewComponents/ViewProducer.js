@@ -54,7 +54,7 @@ function ViewProducer({ spotify }) {
         return { ...old, loading: true };
       });
       fetch(
-        "/api/artist/songs?" +
+        process.env.REACT_APP_BACKEND_LINK+"/api/artist/songs?" +
           new URLSearchParams({
             artistId: geniusArtistId,
             pageNum: geniusResults.nextPage,
@@ -235,7 +235,7 @@ function ViewProducer({ spotify }) {
     // )
 
     fetch(
-      "/api/artist?" +
+      process.env.REACT_APP_BACKEND_LINK+"/api/artist?" +
         new URLSearchParams({
           artistId: geniusArtistId,
         })

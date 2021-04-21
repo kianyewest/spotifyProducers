@@ -47,7 +47,7 @@ function App() {
   const refreshToken = () =>{
     console.log("attempting to refresh")
     fetch(
-      "/login/refresh_token?" +
+      process.env.REACT_APP_BACKEND_LINK+"/login/refresh_token?" +
         new URLSearchParams({
           refresh_token: loginState.refresh_token,
         })

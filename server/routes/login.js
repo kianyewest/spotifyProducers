@@ -3,9 +3,6 @@ const routes = require('express').Router();
 let request = require('request')
 let querystring = require('querystring')
 
-let redirect_uri = 
-  process.env.REDIRECT_URI || 
-  'http://localhost:8080/login/callback'
 
   const scopes = [
     "user-read-currently-playing",
@@ -22,6 +19,8 @@ let redirect_uri =
   ];
 
 routes.get('/', (req, res) => {
+  let redirect_uri =   process.env.REDIRECT_URI ||   'http://localhost:8080/login/callback'
+
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -33,6 +32,7 @@ routes.get('/', (req, res) => {
 
 routes.get('/callback', (req, res) => {
   let code = req.query.code || null
+  let redirect_uri =   process.env.REDIRECT_URI ||   'http://localhost:8080/login/callback'
   let authOptions = {
     url: 'https://accounts.spotify.com/api/token',
     form: {

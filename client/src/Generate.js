@@ -56,7 +56,7 @@ function Generate({ spotify }) {
     //loading from local storage is just for development
 
     fetch(
-      "/api/getProducers?" +
+      process.env.REACT_APP_BACKEND_LINK+"/api/getProducers?" +
         new URLSearchParams({
           spotifyAccessToken: spotify.getAccessToken(),
           [type(match.params.type)]: match.params.id,

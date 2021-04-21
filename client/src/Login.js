@@ -3,14 +3,14 @@ import { Spin,Row,Col } from 'antd';
 import "./Login.css";
 
 function Login({ loading }) {
-
+  console.log("process.env.BACKEND_LINK: ",process.env.REACT_APP_BACKEND_LINK)
   const DisplayLogin = ()=>{
     return <div className="login">
     <img
       src="https://music-b26f.kxcdn.com/wp-content/uploads/2017/06/635963274692858859903160895_spotify-logo-horizontal-black.jpg"
       alt="Spotify logo"
     />
-    <a href={"http://localhost:8080/login/"}>LOGIN WITH SPOTIFY</a>
+    <a href={process.env.REACT_APP_BACKEND_LINK+"/login/"}>LOGIN WITH SPOTIFY</a>
   </div>
     
   }
