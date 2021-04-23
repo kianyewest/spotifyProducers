@@ -57,14 +57,10 @@ function App() {
 
   useEffect(() => {
     if(doLoginWithUrl(dispatch)){
-      console.log("logged in with url: ")
       //remove the stored saved page
       const prevPageInfo = localStorage.getItem(prevPageInfoText);
-      console.log("window.loc: ",window.location)
       if(prevPageInfo){
-        console.log("prev :",prevPageInfo);
-        // localStorage.clear(prevPageInfoText)
-        console.log("prevPageInfo.history: ",prevPageInfo.history)
+        localStorage.removeItem(prevPageInfoText);
         const info = JSON.parse(prevPageInfo);
         history.replace(
           info.history

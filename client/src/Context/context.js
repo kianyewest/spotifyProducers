@@ -40,7 +40,7 @@ const reducer = (state, action) => {
             isUserAuthenticated:userIsAuthenticated,
             accessToken: accessToken,
             refreshToken: refreshToken,
-            expiryTime,expiryTime,
+            expiryTime:expiryTime,
             };
         
     }

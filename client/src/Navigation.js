@@ -3,8 +3,10 @@ import React from "react";
 import { Button, Nav, Navbar } from "react-bootstrap";
 import { IndexLinkContainer } from "react-router-bootstrap";
 import SearchFunction from "./SearchFunction";
+import { AuthContext } from "./Context/context";
 // const { Header, Content, Footer } = Layout;
 const Navigation = ({ Logout, spotify }) => {
+  const { state, dispatch } = React.useContext(AuthContext);
   return (
     // <Header>
     //   <Menu theme="dark" mode="horizontal" defaultSelectedKeys={["2"]}>
@@ -22,8 +24,11 @@ const Navigation = ({ Logout, spotify }) => {
         <IndexLinkContainer to="/"><Nav.Link>Home</Nav.Link></IndexLinkContainer>
         <IndexLinkContainer to="/about"><Nav.Link>About</Nav.Link></IndexLinkContainer>
         <IndexLinkContainer to="/albums"><Nav.Link>Albums</Nav.Link></IndexLinkContainer>
-
-        <Button onClick={()=>Logout()}>Partial Logout</Button>
+        {/* debugging purposes */}
+        <IndexLinkContainer to="/albums"><Nav.Link>{state.isAuthenticated ? "isAuthenticated" : "not authenticated" }</Nav.Link></IndexLinkContainer>
+        <IndexLinkContainer to="/albums"><Nav.Link>{state.isUserAuthenticated ? "user auth" : "user not auth"}</Nav.Link></IndexLinkContainer>
+        {/* End debugging */}
+        <Button onClick={()=>Logout()}>Logout</Button>
       </Nav>
       <SearchFunction
                     spotify={spotify}
