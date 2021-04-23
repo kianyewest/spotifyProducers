@@ -1,9 +1,9 @@
 name: AWS SSM Send-Command Example
 
 on:
-  workflow_dispatch
   push:
     branches: [main]
+  workflow_dispatch:
   
 
 jobs:
@@ -14,8 +14,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: AWS SSM Send-Command
-        uses: peterkimzz/aws-ssm-send-command@master
-        id: ssm
+        uses: peterkimzz/aws-ssm-send-command@1.0.1
         with:
           aws-region: ${{ secrets.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
