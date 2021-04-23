@@ -18,6 +18,25 @@ let querystring = require('querystring')
     "playlist-modify-private",
   ];
 
+routes.get('/nouser', (req, res) => {
+  let authOptions = {
+    url: 'https://accounts.spotify.com/api/token',
+    form: {
+      grant_type: 'client_credentials'
+    },
+    headers: {
+      'Authorization': 'Basic ' + (Buffer.from(
+        process.env.SPOTIFY_CLIENT_ID + ':' + process.env.SPOTIFY_CLIENT_SECRET
+      ).toString('base64'))
+    },
+    json: true
+  }
+  request.post(authOptions, function(error, response, body) {
+    res.send(body)
+  })
+});
+
+
 routes.get('/', (req, res) => {
   let redirect_uri =   process.env.REDIRECT_URI ||   'http://localhost:8080/login/callback'
 

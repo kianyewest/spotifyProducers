@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, } from "react";
 import {
   Spin,
   Row,
@@ -16,8 +16,10 @@ import {
   Progress,
   Result,
 } from "antd";
-
-import { useRouteMatch } from "react-router-dom";
+ 
+import { useRouteMatch,useHistory } from "react-router-dom";
+import { AuthContext } from './Context/context';
+import { doLogin } from "./Login";
 const { Content } = Layout;
 
 //https://stackoverflow.com/questions/47061160/merge-two-arrays-with-alternating-values
@@ -29,6 +31,7 @@ const interleave = ([x, ...xs], ...rest) =>
     : [x, ...interleave(...rest, xs)]; // inductive: some x, some rest
 
 function Generate({ spotify }) {
+  const { state, dispatch } = React.useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [displayData, setDisplayData] = useState("");
   const [allSongs, setAllSongs] = useState([]);
@@ -38,7 +41,6 @@ function Generate({ spotify }) {
   const defaultNumberPlaylistItems = 40;
 
   const match = useRouteMatch();
-
   const type = (val) => {
     switch (val) {
       case "artist":
@@ -58,23 +60,24 @@ function Generate({ spotify }) {
     fetch(
       process.env.REACT_APP_BACKEND_LINK+"/api/getProducers?" +
         new URLSearchParams({
-          spotifyAccessToken: spotify.getAccessToken(),
+          spotifyAccessToken: state.accessToken,
           [type(match.params.type)]: match.params.id,
         })
     )
       .then((res) => res.json())
       .then((data) => {
+        console.log("d",data);
         setDisplayData(data);      
         const allSongs = interleave(...data.map((d) => d.songs));
         const uniqueSongs = [...new Map(allSongs.map(item => [item.id, item])).values()]
 
         uniqueSongs.slice(0, defaultNumberPlaylistItems).forEach((song) => {getSpotifyTrackFromGeniusTrack(song)});
-        console.log("data: ",data)
+        
         
         setAllSongs(uniqueSongs);
           
         setLoading(false);
-      });
+      }).catch(error=>window.alert("unable to load data, may need to be loged in?: "))
   }, []);
 
   const LoadingMessage = () => {
@@ -90,7 +93,7 @@ function Generate({ spotify }) {
             <Spin size="large" />
           </Row>
           <Row>
-            <h1>Generating Playlist</h1>
+    <h1>Generating Playlist : {JSON.stringify(state)}</h1>
           </Row>
         </Col>
       </Row>
@@ -219,14 +222,11 @@ function Generate({ spotify }) {
         );
       try {
         const me = await spotify.getMe();
-        console.log(me);
-        console.log(me.id);
         const result = spotify.createPlaylist(me.id, {
           name: playlistName ? playlistName : "Generated Playlist",
         });
         result.then(
           (playlistData) => {
-            console.log("playlist data: ", playlistData);
             const playlistId = playlistData.id;
             spotify.addTracksToPlaylist(playlistId, uris).then(
               (data) => setPlaylistId(playlistData),
@@ -243,8 +243,10 @@ function Generate({ spotify }) {
     const spotifyLinksNotLoaded = allSongs
       .slice(0, defaultNumberPlaylistItems)
       .filter((song) => !geniusToSpotify.hasOwnProperty(song.id));
+      const historyOnPageLoad = useHistory().location
     return (
       <>
+        {state.isUserAuthenticated ? 
         <Form name="basic" onFinish={createPlaylist}>
           <Form.Item label="Playlist Name" name="playlistName">
             <Input placeholder="Generated Playlist" />
@@ -274,6 +276,9 @@ function Generate({ spotify }) {
             </p>
           </Form.Item>
         </Form>
+        :<Button onClick={()=>{
+           doLogin(historyOnPageLoad, {[type(match.params.type)]: match.params.id},dispatch)
+          }}>Please Login to Save</Button>}
         <Table
           columns={columns}
           dataSource={dataSource}
@@ -319,8 +324,6 @@ function Generate({ spotify }) {
   };
 
   const processResults = (data, geniusTrack) => {
-    console.log("data is: ",data)
-    console.log("geniusTrack.primary_artist",geniusTrack.primary_artist)
     //exact match
     const geniusArtistName = geniusTrack.primary_artist.name
       .normalize("NFKD")
@@ -372,12 +375,12 @@ function Generate({ spotify }) {
     //if that fails it reduces the title to a bare form and searches again
     spotify.search(cleanQuery, ["track"], { limit: 10 }).then(
       function (data) {
-        console.log("first data: ",data);
+    
         if (!processResults(data, geniusTrack)) {
           //try again with higher limit
           spotify.search(query, ["track"], { limit: 50 }).then(
             function (data) {
-              // console.log("result from higher limit: ", data);
+          
               if (!processResults(data, geniusTrack)) {
                 //try again with only track name
                 spotify

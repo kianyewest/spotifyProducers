@@ -1,23 +1,22 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-
+import { BrowserRouter as Router} from "react-router-dom";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'antd/dist/antd.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import {DataLayer} from "./DataLayer"
-import reducer, {initialState} from "./reducer"
 
 import './index.css';
+import { AuthProvider } from './Context/context';
 
 ReactDOM.render(
   <React.StrictMode>
     {/* This is our context, we pass it the initial state and reducer */}
-    <DataLayer initialState={initialState} reducer={reducer}>
-    
+    <AuthProvider>
+    <Router>
       <App />
-      
-    </DataLayer>
+      </Router>
+    </AuthProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );

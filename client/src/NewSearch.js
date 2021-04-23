@@ -12,6 +12,8 @@ import {
 import { UserOutlined } from "@ant-design/icons";
 import { Link, useLocation,useHistory } from "react-router-dom";
 import SearchFunction from "./SearchFunction";
+import { AuthContext } from './Context/context';
+import { doLogin } from "./Login";
 const { Content } = Layout;
 
 const emptyState = {
@@ -113,6 +115,8 @@ function NewSearch({ spotify }) {
 
   const location = useLocation();
   const rowLength = 7;
+
+
   return (
     <>
       <Layout className="layout">

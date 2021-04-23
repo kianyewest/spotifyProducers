@@ -1,151 +1,91 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import {Route, Switch,useHistory } from "react-router-dom";
 import SpotifyWebApi from "spotify-web-api-js";
 import Albums from "./Albums";
 import "./App.css";
 import Generate from "./Generate";
-import Login from "./Login";
+import Login, { loginWithoutUser, doRefresh, loadLogin,doLoginWithUrl,prevPageInfoText,doLogOut } from "./Login";
 import Navigation from "./Navigation";
 import NewSearch from "./NewSearch";
 import ViewAlbum from "./ViewComponents/ViewAlbum";
 import ViewArtist from "./ViewComponents/ViewArtist";
 import ViewProducer from "./ViewComponents/ViewProducer";
 import ViewTrack from "./ViewComponents/ViewTrack";
+import { AuthContext } from "./Context/context";
 
 const spotify = new SpotifyWebApi();
-const emptyLoginState = {
-  access_token: undefined,
-  access_expiry: undefined,
-  refresh_token: undefined,
-  length_token_valid: 3600,
-};
+
 function App() {
-  const [loading,setLoading] = useState(true);
-  const [loginState, setLoginState] = useState(emptyLoginState);
-  // const { access_token, access_expiry, refresh_token } = loginState;
-  const [loginTimerId, setLoginTimerId] = useState();
-  const Logout = () => {
-    localStorage.clear();
-  };
-  
-  const saveData = (access_token,new_access_expiry,refresh_token,length_token_valid)=>{
-    const loginData = {
-      access_token: access_token,
-      access_expiry: new_access_expiry,
-      refresh_token: refresh_token,
-      length_token_valid: length_token_valid,
-    };
-    setLoginState((prevState) => {
-      return { ...prevState, ...loginData };
-    });
-    const saveVal = JSON.stringify(loginData);
+  const { state, dispatch } = React.useContext(AuthContext);
+  const [timerId, setTimerId] = useState();
+  const history = useHistory();
 
-    localStorage.setItem("user", saveVal);
-    
-  }
-
-  const refreshToken = () =>{
-    console.log("attempting to refresh")
-    fetch(
-      process.env.REACT_APP_BACKEND_LINK+"/login/refresh_token?" +
-        new URLSearchParams({
-          refresh_token: loginState.refresh_token,
-        })
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        const new_access_expiry =
-            Date.now() / 1000 + parseInt(loginState.length_token_valid); // time in seconds since epoch
-        spotify.setAccessToken(data.access_token);
-        saveData(data.access_token,new_access_expiry,loginState.refresh_token,loginState.length_token_valid)
-        // setLoginState((prevState) => {
-          
-        //   const val = {
-        //     ...prevState,
-        //     access_token: data.access_token,
-        //     access_expiry: new_access_expiry,
-        //   };
-          
-        //   return val;
-        // });
-})
-}
-
-const expired = loginState.access_expiry * 1000 - Date.now() <0;
-  if(expired){
-    console.log("was expired")
-    setLoginState((prev)=>{return {...prev,access_token: undefined, access_expiry: undefined}});
-    refreshToken();
-    
-  }
-  
-  useEffect(() => {
-    console.log("was timer")
-    if (loginTimerId) {
-      clearTimeout(loginTimerId);
-    }
-    const timeDiffInMilli = loginState.access_expiry * 1000 - Date.now();
-    if (timeDiffInMilli) {
-      console.log("need to refresh ",timeDiffInMilli)
-      const timerId = setTimeout(() => {
-        refreshToken()
-          
-      }, Math.max(timeDiffInMilli, 1));
-
-      setLoginTimerId(timerId);
-    }
-  }, [loginState.access_token]);
-
-  
-  useEffect(() => {
-    console.log("up top")
-    const storage = localStorage.getItem("user");
-    if (loginState.access_token) {
-      console.log("hereB")
-      spotify.setAccessToken(loginState.access_token);
-    } else if (storage) {
-      console.log("hereA")
-      const loginData = JSON.parse(storage);
-      console.log("loginData: ",loginData)
-      setLoginState(loginData);
-      spotify.setAccessToken(loginData.access_token);
+  const refreshToken = () => {
+    //need to refresh token
+    if (state.refreshToken) {
+      //refresh current user
+      doRefresh(dispatch, state.refreshToken);
     } else {
-      console.log("here")
-      const queryString = window.location.search;
-      const urlParams = new URLSearchParams(queryString);
-      const access_token = urlParams.get("access_token");
-      const expires_in = urlParams.get("expires_in");
-      const refresh_token = urlParams.get("refresh_token");
-      if (access_token) {
-        const new_access_expiry = Date.now() / 1000 + parseInt(10); // time in seconds since epoch
-        // const loginData = {
-        //   access_token: access_token,
-        //   access_expiry: new_access_expiry,
-        //   refresh_token: refresh_token,
-        //   length_token_valid: expires_in,
-        // };
-        saveData(access_token,new_access_expiry,refresh_token,expires_in)
-        // setLoginState((prevState) => {
-        //   return { ...prevState, ...loginData };
-        // });
-        // const saveVal = JSON.stringify(loginData);
-
-        // localStorage.setItem("user", saveVal);
-        spotify.setAccessToken(access_token);
-      }else{
-        setLoading(false);
-      }
+      //get new default token
+      loginWithoutUser(dispatch);
     }
-    console.log("THIS ONE DONE");
+  };
+
+  const setTimer = () => {
+    if (timerId) {
+      clearTimeout(timerId);
+    }
+    //set Timer to go off, so we can refresh
+    const tempTimerId = setTimeout(() => {
+      console.log("timeout complete");
+      refreshToken();
+      spotify.setAccessToken(state.accessToken);
+    }, Math.max(state.expiryTime - 60 * 1000 - Date.now(), 1));
+
+    setTimerId(tempTimerId);
+  };
+
+  useEffect(() => {
+    spotify.setAccessToken(state.accessToken);
+  }, [state.accessToken]);
+
+  useEffect(() => {
+    if (state.expiryTime) {
+      setTimer();
+    }
+  }, [state.expiryTime]);
+
+  useEffect(() => {
+    if(doLoginWithUrl(dispatch)){
+      console.log("logged in with url: ")
+      //remove the stored saved page
+      const prevPageInfo = localStorage.getItem(prevPageInfoText);
+      console.log("window.loc: ",window.location)
+      if(prevPageInfo){
+        console.log("prev :",prevPageInfo);
+        // localStorage.clear(prevPageInfoText)
+        console.log("prevPageInfo.history: ",prevPageInfo.history)
+        const info = JSON.parse(prevPageInfo);
+        history.replace(
+          info.history
+        )
+      }else{
+        //clear header
+        history.replace(history.pathname);
+      }
+      //check for saved page
+
+    }else if (!loadLogin(dispatch)) {
+      //unable to load user, login without user
+      loginWithoutUser(dispatch);
+    }
   }, []);
 
   return (
-    <Router>
-      {loginState.access_token && (
-        <Navigation Logout={Logout} spotify={spotify}  />
-      )}
+    <>
+      {state.accessToken && <Navigation Logout={()=>{doLogOut(dispatch); loginWithoutUser(dispatch);}} spotify={spotify} />}
 
-      {loginState.access_token ? (
+      {state.accessToken ? (
         <Switch>
           <Route exact path="/">
             <NewSearch spotify={spotify} />
@@ -169,16 +109,16 @@ const expired = loginState.access_expiry * 1000 - Date.now() <0;
             <ViewTrack spotify={spotify} />
           </Route>
           <Route path="/generate/:type/:id">
-            <Generate spotify={spotify}/>
+            <Generate spotify={spotify} />
           </Route>
           <Route path="/">
             <h1>This is not a url :(</h1>
           </Route>
         </Switch>
       ) : (
-        <Login loading={loading}/>
+        <Login loading={true} />
       )}
-    </Router>
+   </>
   );
 }
 
