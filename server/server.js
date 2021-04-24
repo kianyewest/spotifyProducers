@@ -20,6 +20,9 @@ require('dotenv').config({path:envPath})
 //  Connect all our routes to our application
 app.use('/api', apiRoute);
 app.use('/login', loginRoute);
+app.get('/', (req, res) => {
+  res.send('Hello World! go to /api or /login')
+})
 
 
 const port = process.env.PORT || 8080;

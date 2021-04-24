@@ -22,7 +22,7 @@ export const doLoginWithUrl = (dispatch)=>{
 export const loginWithoutUser = (dispatch)=>{
   console.log("login without user called")
   fetch(
-    process.env.REACT_APP_BACKEND_LINK+"/login/nouser"
+    process.env.REACT_APP_BACKEND_LINK+"login/nouser"
   ).then((res) => res.json()).then(
     data=>{
       dispatch({type:"DEFAULT_LOGIN",payload:data});
@@ -54,7 +54,7 @@ export const doLogin = (history,data,dispatch)=>{
   doLogOut(dispatch);
   // const data = {pathname:history.pathname,se}
   localStorage.setItem(prevPageInfoText,JSON.stringify({history:history,data:data}))
-  window.location.href = process.env.REACT_APP_BACKEND_LINK+"/login/";
+  window.location.href = process.env.REACT_APP_BACKEND_LINK+"login/";
 }
 
 export const doLogOut = (dispatch)=>{
@@ -63,7 +63,7 @@ export const doLogOut = (dispatch)=>{
 
 export const doRefresh = (dispatch, refreshToken)=>{
   fetch(
-    process.env.REACT_APP_BACKEND_LINK+"/login/refresh_token?" +
+    process.env.REACT_APP_BACKEND_LINK+"login/refresh_token?" +
       new URLSearchParams({
         refresh_token: refreshToken,
       })
@@ -83,7 +83,7 @@ function Login({ loading }) {
       src="https://music-b26f.kxcdn.com/wp-content/uploads/2017/06/635963274692858859903160895_spotify-logo-horizontal-black.jpg"
       alt="Spotify logo"
     />
-    <a href={process.env.REACT_APP_BACKEND_LINK+"/login/"}>LOGIN WITH SPOTIFY</a>
+    <a href={process.env.REACT_APP_BACKEND_LINK+"login/"}>LOGIN WITH SPOTIFY</a>
   </div>
     
   }

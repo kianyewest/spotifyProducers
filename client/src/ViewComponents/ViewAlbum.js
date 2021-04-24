@@ -17,7 +17,7 @@ function ViewAlbum({ spotify }) {
         setSpotifyResults(data);
 
         fetch(
-          process.env.REACT_APP_BACKEND_LINK+"/api/search?" +
+          process.env.REACT_APP_BACKEND_LINK+"api/search?" +
             new URLSearchParams({
               artistName: data.artists[0].name,
               albumName: data.name,

@@ -38,7 +38,7 @@ routes.get('/nouser', (req, res) => {
 
 
 routes.get('/', (req, res) => {
-  let redirect_uri =   process.env.REDIRECT_URI ||   'http://localhost:8080/login/callback'
+  let redirect_uri =   process.env.REDIRECT_URI ||   'http://localhost:8080/login/callback/'
 
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
@@ -51,7 +51,7 @@ routes.get('/', (req, res) => {
 
 routes.get('/callback', (req, res) => {
   let code = req.query.code || null
-  let redirect_uri =   process.env.REDIRECT_URI ||   'http://localhost:8080/login/callback'
+  let redirect_uri =   process.env.REDIRECT_URI ||   'http://localhost:8080/login/callback/'
   let authOptions = {
     url: 'https://accounts.spotify.com/api/token',
     form: {
@@ -70,7 +70,7 @@ routes.get('/callback', (req, res) => {
     const access_token = body.access_token
     const expires_in = body.expires_in
     const refresh_token = body.refresh_token
-    const uri = process.env.FRONTEND_URI || 'http://localhost:3000'
+    const uri = process.env.FRONTEND_URI || 'http://localhost:3000/'
     res.redirect(uri + '?access_token=' + access_token+"&expires_in="+expires_in+"&refresh_token="+refresh_token)
   })
   });
