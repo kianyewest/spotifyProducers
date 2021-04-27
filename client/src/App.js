@@ -118,7 +118,7 @@ function App() {
       {state.unableToReachBackend ? <Result
     status="warning"
     title="Unable to contact backend server"
-  /> :<> <p>{JSON.stringify(state)}</p>{navBar}{page}  </>}
+  /> :<>{navBar}{page}  </>}
       
    </>
   );

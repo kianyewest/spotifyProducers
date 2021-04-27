@@ -46,3 +46,7 @@ background: linear-gradient(to bottom, #38ef7d, #11998e); /*W3C, IE 10+/ Edge, F
   max-height:50px;
   overflow:hidden;
 }
+
+.layout{
+  background-color: #0000;
+}

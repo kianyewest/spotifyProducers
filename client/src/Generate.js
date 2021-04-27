@@ -81,6 +81,7 @@ function Generate({ spotify }) {
   }, []);
 
   const LoadingMessage = () => {
+    console.log("curent state: ",JSON.stringify(state));
     return (
       <Row
         type="flex"
@@ -93,7 +94,6 @@ function Generate({ spotify }) {
             <Spin size="large" />
           </Row>
           <Row>
-    <h1>Generating Playlist : {JSON.stringify(state)}</h1>
           </Row>
         </Col>
       </Row>

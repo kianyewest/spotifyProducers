@@ -2,7 +2,6 @@
 import React from "react";
 import { Button, Nav, Navbar } from "react-bootstrap";
 import { IndexLinkContainer } from "react-router-bootstrap";
-import SearchFunction from "./SearchFunction";
 import { AuthContext } from "./Context/context";
 // const { Header, Content, Footer } = Layout;
 const Navigation = ({ Logout, spotify }) => {
@@ -30,11 +29,6 @@ const Navigation = ({ Logout, spotify }) => {
         {/* End debugging */}
         <Button onClick={()=>Logout()}>Logout</Button>
       </Nav>
-      <SearchFunction
-                    spotify={spotify}
-                    size={300}
-
-                  />
     </Navbar>
   );
 };
