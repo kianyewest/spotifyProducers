@@ -18,6 +18,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "memoryBuild": "NODE_OPTIONS=--max-old-space-size=4096 react-scripts build",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

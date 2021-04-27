@@ -21,13 +21,13 @@ export const doLoginWithUrl = (dispatch)=>{
 
 export const loginWithoutUser = (dispatch)=>{
   console.log("login without user called")
-  fetch(
-    process.env.REACT_APP_BACKEND_LINK+"login/nouser"
+  fetchWithTimeout(
+    process.env.REACT_APP_BACKEND_LINK+"login/nouser",{timeout:10000}
   ).then((res) => res.json()).then(
     data=>{
+      console.log("reahed server")
       dispatch({type:"DEFAULT_LOGIN",payload:data});
-    }
-  )
+    }).catch(err=>{dispatch({type:"NETWORK_ERROR",payload:err})})
 }
 
 export const loadLogin = (dispatch)=>{
@@ -57,23 +57,45 @@ export const doLogin = (history,data,dispatch)=>{
   window.location.href = process.env.REACT_APP_BACKEND_LINK+"login/";
 }
 
+export const checkAPI = (dispatch)=>{
+  fetchWithTimeout(
+    process.env.REACT_APP_BACKEND_LINK,{timeout:10000}
+  ).then((res) => console.log("got response from server: ",res)).catch(err=>{dispatch({type:"NETWORK_ERROR",payload:err})})
+}
+
 export const doLogOut = (dispatch)=>{
   dispatch({type:"LOGOUT"})
 }
 
 export const doRefresh = (dispatch, refreshToken)=>{
-  fetch(
+
+  fetchWithTimeout(
     process.env.REACT_APP_BACKEND_LINK+"login/refresh_token?" +
       new URLSearchParams({
         refresh_token: refreshToken,
-      })
+      }),{timeout:10000}
   )
     .then((res) => res.json())
     .then((data) => {
       dispatch({type:"REFRESH",payload:data})
-    })
+    }).catch(err=>dispatch({type:"NETWORK_ERROR",payload:err}))
 }
 
+//https://dmitripavlutin.com/timeout-fetch-request/
+export async function fetchWithTimeout(resource, options) {
+  const { timeout = 8000 } = options;
+  
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  const response = await fetch(resource, {
+    ...options,
+    signal: controller.signal  
+  });
+  clearTimeout(id);
+
+  return response;
+}
 
 function Login({ loading }) {
   console.log("process.env.BACKEND_LINK: ",process.env.REACT_APP_BACKEND_LINK)

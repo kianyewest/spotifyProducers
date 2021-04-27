@@ -4,7 +4,7 @@ import SpotifyWebApi from "spotify-web-api-js";
 import Albums from "./Albums";
 import "./App.css";
 import Generate from "./Generate";
-import Login, { loginWithoutUser, doRefresh, loadLogin,doLoginWithUrl,prevPageInfoText,doLogOut } from "./Login";
+import Login, { loginWithoutUser, doRefresh, loadLogin,doLoginWithUrl,prevPageInfoText,doLogOut,checkAPI } from "./Login";
 import Navigation from "./Navigation";
 import NewSearch from "./NewSearch";
 import ViewAlbum from "./ViewComponents/ViewAlbum";
@@ -12,7 +12,8 @@ import ViewArtist from "./ViewComponents/ViewArtist";
 import ViewProducer from "./ViewComponents/ViewProducer";
 import ViewTrack from "./ViewComponents/ViewTrack";
 import { AuthContext } from "./Context/context";
-
+import {Button,Result
+} from "antd";
 const spotify = new SpotifyWebApi();
 
 function App() {
@@ -45,6 +46,7 @@ function App() {
     setTimerId(tempTimerId);
   };
 
+  useEffect(()=>{checkAPI(dispatch)},[])
   useEffect(() => {
     spotify.setAccessToken(state.accessToken);
   }, [state.accessToken]);
@@ -77,43 +79,47 @@ function App() {
     }
   }, []);
 
+  const navBar = state.accessToken && <Navigation Logout={()=>{doLogOut(dispatch); loginWithoutUser(dispatch);}} spotify={spotify} />
+  const page = state.accessToken ? (
+    <Switch>
+      <Route exact path="/">
+        <NewSearch spotify={spotify} />
+      </Route>
+      <Route exact path="/about">
+        <h1>About page</h1>
+      </Route>
+      <Route exact path="/albums">
+        <Albums spotify={spotify} />
+      </Route>
+      <Route path="/album/:id">
+        <ViewAlbum spotify={spotify} />
+      </Route>
+      <Route path="/producer/:geniusArtistId">
+        <ViewProducer spotify={spotify} />
+      </Route>
+      <Route path="/artist/:spotifyArtistId">
+        <ViewArtist spotify={spotify} />
+      </Route>
+      <Route path="/track/:id">
+        <ViewTrack spotify={spotify} />
+      </Route>
+      <Route path="/generate/:type/:id">
+        <Generate spotify={spotify} />
+      </Route>
+      <Route path="/">
+        <h1>This is not a url :(</h1>
+      </Route>
+    </Switch>
+  ) : (
+    <Login loading={true} />
+  )
   return (
     <>
-      {state.accessToken && <Navigation Logout={()=>{doLogOut(dispatch); loginWithoutUser(dispatch);}} spotify={spotify} />}
-
-      {state.accessToken ? (
-        <Switch>
-          <Route exact path="/">
-            <NewSearch spotify={spotify} />
-          </Route>
-          <Route exact path="/about">
-            <h1>About page</h1>
-          </Route>
-          <Route exact path="/albums">
-            <Albums spotify={spotify} />
-          </Route>
-          <Route path="/album/:id">
-            <ViewAlbum spotify={spotify} />
-          </Route>
-          <Route path="/producer/:geniusArtistId">
-            <ViewProducer spotify={spotify} />
-          </Route>
-          <Route path="/artist/:spotifyArtistId">
-            <ViewArtist spotify={spotify} />
-          </Route>
-          <Route path="/track/:id">
-            <ViewTrack spotify={spotify} />
-          </Route>
-          <Route path="/generate/:type/:id">
-            <Generate spotify={spotify} />
-          </Route>
-          <Route path="/">
-            <h1>This is not a url :(</h1>
-          </Route>
-        </Switch>
-      ) : (
-        <Login loading={true} />
-      )}
+      {state.unableToReachBackend ? <Result
+    status="warning"
+    title="Unable to contact backend server"
+  /> :<> <p>{JSON.stringify(state)}</p>{navBar}{page}  </>}
+      
    </>
   );
 }

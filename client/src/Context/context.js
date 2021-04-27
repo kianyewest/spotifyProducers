@@ -8,6 +8,7 @@ const initialState = {
     accessToken: null,
     refreshToken: null,
     expiryTime:null,
+    unableToReachBackend:false,
 };
 
 
@@ -51,7 +52,7 @@ const reducer = (state, action) => {
         const expiryTime = Date.now() + parseInt(expires_in)*1000; // time in seconds since epoch
         
         localStorage.setItem("DEFAULT_LOGIN", JSON.stringify({accessToken,expiryTime}));
-
+        console.log("DEFAULT LOGIN CALLED: stae val: ",state)
         return {
             ...state,
             isAuthenticated: true,
@@ -84,6 +85,14 @@ const reducer = (state, action) => {
       return {
         ...state,
         ...initialState
+      };
+    }
+    case "NETWORK_ERROR":
+        {
+          console.log("recorded network error :(")
+      return {
+        ...state,
+        unableToReachBackend:true,
       };
     }
     default:
