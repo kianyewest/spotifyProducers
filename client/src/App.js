@@ -1,10 +1,18 @@
 import React, { useEffect, useState } from "react";
-import {Route, Switch,useHistory } from "react-router-dom";
+import { Route, Switch, useHistory } from "react-router-dom";
 import SpotifyWebApi from "spotify-web-api-js";
 import Albums from "./Albums";
 import "./App.css";
 import Generate from "./Generate";
-import Login, { loginWithoutUser, doRefresh, loadLogin,doLoginWithUrl,prevPageInfoText,doLogOut,checkAPI } from "./Login";
+import Login, {
+  loginWithoutUser,
+  doRefresh,
+  loadLogin,
+  doLoginWithUrl,
+  prevPageInfoText,
+  doLogOut,
+  checkAPI,
+} from "./Login";
 import Navigation from "./Navigation";
 import NewSearch from "./NewSearch";
 import ViewAlbum from "./ViewComponents/ViewAlbum";
@@ -12,8 +20,8 @@ import ViewArtist from "./ViewComponents/ViewArtist";
 import ViewProducer from "./ViewComponents/ViewProducer";
 import ViewTrack from "./ViewComponents/ViewTrack";
 import { AuthContext } from "./Context/context";
-import {Button,Result
-} from "antd";
+import { Button, Result } from "antd";
+import DisplayResults from './GeneratePlaylist/DisplayResults';
 const spotify = new SpotifyWebApi();
 
 function App() {
@@ -46,7 +54,9 @@ function App() {
     setTimerId(tempTimerId);
   };
 
-  useEffect(()=>{checkAPI(dispatch)},[])
+  useEffect(() => {
+    checkAPI(dispatch);
+  }, []);
   useEffect(() => {
     spotify.setAccessToken(state.accessToken);
   }, [state.accessToken]);
@@ -58,28 +68,33 @@ function App() {
   }, [state.expiryTime]);
 
   useEffect(() => {
-    if(doLoginWithUrl(dispatch)){
+    if (doLoginWithUrl(dispatch)) {
       //remove the stored saved page
       const prevPageInfo = localStorage.getItem(prevPageInfoText);
-      if(prevPageInfo){
+      if (prevPageInfo) {
         localStorage.removeItem(prevPageInfoText);
         const info = JSON.parse(prevPageInfo);
-        history.replace(
-          info.history
-        )
-      }else{
+        history.replace(info.history);
+      } else {
         //clear header
         history.replace(history.pathname);
       }
       //check for saved page
-
-    }else if (!loadLogin(dispatch)) {
+    } else if (!loadLogin(dispatch)) {
       //unable to load user, login without user
       loginWithoutUser(dispatch);
     }
   }, []);
 
-  const navBar = state.accessToken && <Navigation Logout={()=>{doLogOut(dispatch); loginWithoutUser(dispatch);}} spotify={spotify} />
+  const navBar = state.accessToken && (
+    <Navigation
+      Logout={() => {
+        doLogOut(dispatch);
+        loginWithoutUser(dispatch);
+      }}
+      spotify={spotify}
+    />
+  );
   const page = state.accessToken ? (
     <Switch>
       <Route exact path="/">
@@ -104,7 +119,7 @@ function App() {
         <ViewTrack spotify={spotify} />
       </Route>
       <Route path="/generate/:type/:id">
-        <Generate spotify={spotify} />
+        <DisplayResults spotify={spotify} />
       </Route>
       <Route path="/">
         <h1>This is not a url :(</h1>
@@ -112,15 +127,18 @@ function App() {
     </Switch>
   ) : (
     <Login loading={true} />
-  )
+  );
   return (
     <>
-      {state.unableToReachBackend ? <Result
-    status="warning"
-    title="Unable to contact backend server"
-  /> :<>{navBar}{page}  </>}
-      
-   </>
+      {state.unableToReachBackend ? (
+        <Result status="warning" title="Unable to contact backend server" />
+      ) : (
+        <>
+          {navBar}
+          {page}{" "}
+        </>
+      )}
+    </>
   );
 }
 

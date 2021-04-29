@@ -1,4 +1,4 @@
-import React, { useState, useEffect, } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Spin,
   Row,
@@ -16,9 +16,9 @@ import {
   Progress,
   Result,
 } from "antd";
- 
-import { useRouteMatch,useHistory } from "react-router-dom";
-import { AuthContext } from './Context/context';
+
+import { useRouteMatch, useHistory } from "react-router-dom";
+import { AuthContext } from "./Context/context";
 import { doLogin } from "./Login";
 const { Content } = Layout;
 
@@ -33,11 +33,13 @@ const interleave = ([x, ...xs], ...rest) =>
 function Generate({ spotify }) {
   const { state, dispatch } = React.useContext(AuthContext);
   const [loading, setLoading] = useState(true);
+  const [producers, setProducers] = useState([]);
+
   const [displayData, setDisplayData] = useState("");
   const [allSongs, setAllSongs] = useState([]);
   const [geniusToSpotify, setGeniusToSpotify] = useState({});
   const [playlistId, setPlaylistId] = useState("");
-  const [loadingPlaylist,setLoadingPlaylist] = useState(false)
+  const [loadingPlaylist, setLoadingPlaylist] = useState(false);
   const defaultNumberPlaylistItems = 40;
 
   const match = useRouteMatch();
@@ -56,9 +58,10 @@ function Generate({ spotify }) {
 
   useEffect(() => {
     //loading from local storage is just for development
-
+    console.log("about to fetch: ", Date.now() / 1000);
     fetch(
-      process.env.REACT_APP_BACKEND_LINK+"api/getProducers?" +
+      process.env.REACT_APP_BACKEND_LINK +
+        "api/getProducers?" +
         new URLSearchParams({
           spotifyAccessToken: state.accessToken,
           [type(match.params.type)]: match.params.id,
@@ -66,22 +69,44 @@ function Generate({ spotify }) {
     )
       .then((res) => res.json())
       .then((data) => {
-        console.log("d",data);
-        setDisplayData(data);      
-        const allSongs = interleave(...data.map((d) => d.songs));
-        const uniqueSongs = [...new Map(allSongs.map(item => [item.id, item])).values()]
+        console.log("fetch complete: ", Date.now() / 1000);
+        console.log("d", data);
+        // setProducers(data.producers);
+        console.log("just set it to: ", data.producers, producers);
 
-        uniqueSongs.slice(0, defaultNumberPlaylistItems).forEach((song) => {getSpotifyTrackFromGeniusTrack(song)});
-        
-        
-        setAllSongs(uniqueSongs);
-          
-        setLoading(false);
-      }).catch(error=>window.alert("unable to load data, may need to be loged in?: "))
+        data.producers.forEach((localProducer) => {
+          if (!localProducer.hasOwnProperty("songs")) {
+            fetch(
+              process.env.REACT_APP_BACKEND_LINK +
+                "api/getProducerSongs?" +
+                new URLSearchParams({
+                  geniusProducerId: localProducer.id,
+                })
+            )
+              .then((res) => res.json())
+              .then((result) => {
+                console.log("returned: ", producers, result);
+                localProducer.songs = result.songs;
+                setProducers([...data.producers]);
+              });
+          }
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+        window.alert(
+          "unable to load data, may need to be logged in?: " +
+            JSON.stringify(error)
+        );
+      });
   }, []);
 
+  useEffect(() => {
+    console.log("producers: ",producers)
+  }, [producers]);
+
   const LoadingMessage = () => {
-    console.log("curent state: ",JSON.stringify(state));
+    console.log("curent state: ", JSON.stringify(state));
     return (
       <Row
         type="flex"
@@ -93,8 +118,7 @@ function Generate({ spotify }) {
           <Row type="flex" justify="center">
             <Spin size="large" />
           </Row>
-          <Row>
-          </Row>
+          <Row></Row>
         </Col>
       </Row>
     );
@@ -118,43 +142,43 @@ function Generate({ spotify }) {
   const DisplayProducers = ({ data }) => {
     return (
       <>
-      <h1>Producers</h1>
-      <Collapse>
-        {data.map((item, index) => {
-          //unable to put this in seperate component due to bug in antd code, Collapse.Panel cannot be within another component
-          const { producer, songs } = item;
-          const data = songs.map((song) => {
-            const title = song.title;
-            const artist = song.primary_artist.name;
-            return {
-              key: song.id+JSON.stringify(song),
-              title: title,
-              artist: artist,
-            };
-          });
-          return (
-            <Collapse.Panel
-              extra={
-                <img
-                  alt="example"
-                  src={producer.header_image_url}
-                  className="image-container"
+        <h1>Producers</h1>
+        <Collapse>
+          {data.map((item, index) => {
+            //unable to put this in seperate component due to bug in antd code, Collapse.Panel cannot be within another component
+            const { producer, songs } = item;
+            const data = songs.map((song) => {
+              const title = song.title;
+              const artist = song.primary_artist.name;
+              return {
+                key: song.id + JSON.stringify(song),
+                title: title,
+                artist: artist,
+              };
+            });
+            return (
+              <Collapse.Panel
+                extra={
+                  <img
+                    alt="example"
+                    src={producer.header_image_url}
+                    className="image-container"
+                  />
+                }
+                headStyle={{ backgroundColor: "#fafafa" }}
+                header={producer.name}
+                key={`${index}`}
+              >
+                <Table
+                  columns={columns}
+                  dataSource={data}
+                  pagination={false}
+                  scroll={{ y: 320 }}
                 />
-              }
-              headStyle={{ backgroundColor: "#fafafa" }}
-              header={producer.name}
-              key={`${index}`}
-            >
-              <Table
-                columns={columns}
-                dataSource={data}
-                pagination={false}
-                scroll={{ y: 320 }}
-              />
-            </Collapse.Panel>
-          );
-        })}
-      </Collapse>
+              </Collapse.Panel>
+            );
+          })}
+        </Collapse>
       </>
     );
   };
@@ -187,7 +211,6 @@ function Generate({ spotify }) {
         },
       },
     ];
-
 
     const dataSource = allSongs
       .slice(0, defaultNumberPlaylistItems)
@@ -243,42 +266,52 @@ function Generate({ spotify }) {
     const spotifyLinksNotLoaded = allSongs
       .slice(0, defaultNumberPlaylistItems)
       .filter((song) => !geniusToSpotify.hasOwnProperty(song.id));
-      const historyOnPageLoad = useHistory().location
+    const historyOnPageLoad = useHistory().location;
     return (
       <>
-        {state.isUserAuthenticated ? 
-        <Form name="basic" onFinish={createPlaylist}>
-          <Form.Item label="Playlist Name" name="playlistName">
-            <Input placeholder="Generated Playlist" />
-          </Form.Item>
+        {state.isUserAuthenticated ? (
+          <Form name="basic" onFinish={createPlaylist}>
+            <Form.Item label="Playlist Name" name="playlistName">
+              <Input placeholder="Generated Playlist" />
+            </Form.Item>
 
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              disabled={spotifyLinksNotLoaded.length === 0 ? false : true}
-            >
-              Create Playlist
-            </Button>
-            <Progress
-              type="circle"
-              percent={
-                ((defaultNumberPlaylistItems - spotifyLinksNotLoaded.length) /
-                  defaultNumberPlaylistItems) *
-                100
-              }
-              width={40}
-            />
-            <p>
-              {spotifyLinksNotLoaded.length === 0
-                ? ""
-                : "Loading spotify Links"}
-            </p>
-          </Form.Item>
-        </Form>
-        :<Button onClick={()=>{
-           doLogin(historyOnPageLoad, {[type(match.params.type)]: match.params.id},dispatch)
-          }}>Please Login to Save</Button>}
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                disabled={spotifyLinksNotLoaded.length === 0 ? false : true}
+              >
+                Create Playlist
+              </Button>
+              <Progress
+                type="circle"
+                percent={
+                  ((defaultNumberPlaylistItems - spotifyLinksNotLoaded.length) /
+                    defaultNumberPlaylistItems) *
+                  100
+                }
+                width={40}
+              />
+              <p>
+                {spotifyLinksNotLoaded.length === 0
+                  ? ""
+                  : "Loading spotify Links"}
+              </p>
+            </Form.Item>
+          </Form>
+        ) : (
+          <Button
+            onClick={() => {
+              doLogin(
+                historyOnPageLoad,
+                { [type(match.params.type)]: match.params.id },
+                dispatch
+              );
+            }}
+          >
+            Please Login to Save
+          </Button>
+        )}
         <Table
           columns={columns}
           dataSource={dataSource}
@@ -291,13 +324,11 @@ function Generate({ spotify }) {
 
   const matchExactArtist = (spotifyResult, geniusArtistName) => {
     return spotifyResult.filter((track) => {
-      if(track === null){
+      if (track === null) {
         return false;
       }
       const spotifyArtist = track.artists[0].name.normalize("NFKD");
-      
-      
-      
+
       //normalise to so that characters such as space and no-break space will match each other
       // console.log(track.name,spotifyArtist,geniusArtistName,spotifyArtist.localeCompare(geniusArtistName, 'en', { sensitivity: 'base' })===0);
       return (
@@ -313,7 +344,7 @@ function Generate({ spotify }) {
     //try seeing if artist is within genius artist name i.e "Drake" within the artist name of "Drake,Kanye west, Lil Wayne"
     //unsure of why genius would store an artist as a list of artists they already have in there database with no reference to them :(
     return spotifyResult.filter((track) => {
-      if(track === null){
+      if (track === null) {
         return false;
       }
       const spotifyArtist = track.artists[0].name
@@ -375,12 +406,10 @@ function Generate({ spotify }) {
     //if that fails it reduces the title to a bare form and searches again
     spotify.search(cleanQuery, ["track"], { limit: 10 }).then(
       function (data) {
-    
         if (!processResults(data, geniusTrack)) {
           //try again with higher limit
           spotify.search(query, ["track"], { limit: 50 }).then(
             function (data) {
-          
               if (!processResults(data, geniusTrack)) {
                 //try again with only track name
                 spotify
@@ -429,7 +458,7 @@ function Generate({ spotify }) {
     <LoadingMessage />
   ) : playlistId ? (
     <Result
-    key="Alg"
+      key="Alg"
       status="success"
       title="Successfully Created Playlist!"
       extra={[
@@ -438,25 +467,30 @@ function Generate({ spotify }) {
             <a href={playlistId.external_urls.spotify}>View Playlist</a>
           )}
         </Button>,
-        <Button onClick={()=>{ setLoadingPlaylist(false); setPlaylistId("")}}>
+        <Button
+          onClick={() => {
+            setLoadingPlaylist(false);
+            setPlaylistId("");
+          }}
+        >
           Go Back
-        </Button>
+        </Button>,
       ]}
     />
   ) : (
     <Spin spinning={loadingPlaylist} delay={500}>
-    <Layout className="layout">
-      <Content>
-        <Row justify="space-around">
-          <Col span={16} style={{ paddingTop: "30px" }}>
-            {displayData && <DisplayPlaylist data={displayData} />}
-          </Col>
-          <Col span={7} style={{ paddingTop: "30px" }}>
-            {displayData && <DisplayProducers data={displayData} />}
-          </Col>
-        </Row>
-      </Content>
-    </Layout>
+      <Layout className="layout">
+        <Content>
+          <Row justify="space-around">
+            <Col span={16} style={{ paddingTop: "30px" }}>
+              {displayData && <DisplayPlaylist data={displayData} />}
+            </Col>
+            <Col span={7} style={{ paddingTop: "30px" }}>
+              {displayData && <DisplayProducers data={displayData} />}
+            </Col>
+          </Row>
+        </Content>
+      </Layout>
     </Spin>
   );
 }

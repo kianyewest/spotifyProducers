@@ -136,7 +136,7 @@ function ItemLayout({ data, headerName, getItemData,rowLength,history}) {
           }
 
   return (
-    <Col span={rowLength}>
+    <Col  lg={rowLength}>
       <List
         loading={false}
         size="large"
