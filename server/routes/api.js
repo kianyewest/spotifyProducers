@@ -41,7 +41,7 @@ const searchGeniusWithQuery = (query, artistName) => {
 
 const searchGenius = (trackName, artistName) => {
   return new Promise(function (resolve, reject) {
-    const query = trackName ? trackName + " by " + artistName : artistName;
+    const query = trackName ? trackName + " " + artistName : artistName;
 
     searchGeniusWithQuery(query, artistName)
       .then(function (response) {
@@ -186,6 +186,7 @@ const getSongsByProducers = async (producers) => {
   return Promise.all(producersSongs);
 };
 
+/** */
 /**
  * Returns a promise containing songs by the producers of the given track
  * @param {string} spotifyAccessToken
@@ -209,29 +210,20 @@ const doTrack = async (spotifyAccessToken, spotifyTrackId) => {
   const originalArtistGeniusId = originalSong.primary_artist.id;
   const producers = originalSong.producer_artists;
 
-  const songs = await getSongsByProducers(producers);
+  // const songs = await getSongsByProducers(producers);
   return {
-    originalArtistGeniusId: originalArtistGeniusId,
-    results: songs,
+    primaryArtists: [originalArtistGeniusId],
+    producers: producers,
   };
-  // return getProducers(geniusData.result.length > 0 ? geniusData.result[0].result.id:undefined);
+  
 };
 
-/**
- * Returns a promise containing songs by the producers of the given album
- * @param {string} spotifyAccessToken
- * @param {string} spotifyAlbumId
- */
-const doAlbum = async (spotifyAccessToken, spotifyAlbumId) => {
-  spotifyApi.setAccessToken(spotifyAccessToken);
-
-  //get Track from spotify
-  const spotifyData = await spotifyApi.getAlbum(spotifyAlbumId);
-  const firstTrackName = spotifyData.body.tracks.items[0].name;
+const getProducersOfAlbumFromTrack = async (firstTrackName,artistName) => {
+  
   //search genius for found track
-  geniusData = await searchGenius(
+  const geniusData = await searchGenius(
     firstTrackName,
-    spotifyData.body.artists[0].name
+    artistName,
   );
   const trackId = geniusData.result[0].result.id;
 
@@ -246,11 +238,74 @@ const doAlbum = async (spotifyAccessToken, spotifyAlbumId) => {
     }
   ).artists;
 
-  const songs = await getSongsByProducers(producers);
   return {
     originalArtistGeniusId: originalArtistGeniusId,
-    results: songs,
+    producers: producers,
   };
+};
+/**
+ * Returns a promise containing songs by the producers of the given album
+ * @param {string} spotifyAccessToken
+ * @param {string} spotifyAlbumId
+ */
+const doAlbum = async (spotifyAccessToken, spotifyAlbumId) => {
+  spotifyApi.setAccessToken(spotifyAccessToken);
+
+  //get Track from spotify
+  const spotifyData = await spotifyApi.getAlbum(spotifyAlbumId);
+  const firstTrackName = spotifyData.body.tracks.items[0].name;
+  const artistName = spotifyData.body.artists[0].name;
+  const data = await getProducersOfAlbumFromTrack(
+    firstTrackName,
+    artistName
+  );
+  
+  // const songs = await getSongsByProducers(producers);
+  return {
+    primaryArtists: [data.originalArtistGeniusId],
+    producers: data.producers,
+  };
+};
+
+const doArtist = async (spotifyAccessToken, spotifyArtistId) => {
+  spotifyApi.setAccessToken(spotifyAccessToken);
+  //get Albums from spotify
+  const spotifyData = await spotifyApi.getArtistAlbums(spotifyArtistId,{limit:50,market:"NZ",include_groups:"album"});
+  
+  
+  const albumsPromise = spotifyData.body.items.map(async (album) => {
+    return spotifyApi.getAlbum(album.id);
+  });
+
+  const uniqueFirstTrack = new Map();
+  const albums = await Promise.all(albumsPromise);
+  //get first track of each
+  //stops duplicate albums from being searched
+  albums.forEach(element => {
+    const firstTrackName = element.body.tracks.items[0].name;
+    const artistName = element.body.artists[0].name;
+    uniqueFirstTrack.set(firstTrackName,artistName);
+  });
+
+  const producerPromises = [];
+  uniqueFirstTrack.forEach((artistName,trackName)=>{
+    producerPromises.push(getProducersOfAlbumFromTrack(trackName,artistName));
+  });
+    
+    
+
+  const producers = await Promise.all(producerPromises);
+
+  const primaryArtists = [];
+  const myMap = new Map();
+  producers.forEach((data) => {
+    primaryArtists.push(data.originalArtistGeniusId);
+    data.producers.forEach((element) => {
+      myMap.set(element.id, element);
+    });
+  });
+
+  return {primaryArtists:primaryArtists,producers:Array.from(myMap.values())};
 };
 
 routes.get("/getProducers", async (req, res) => {
@@ -264,19 +319,33 @@ routes.get("/getProducers", async (req, res) => {
       data = await doTrack(spotifyAccessToken, spotifyTrackId);
     } else if (spotifyAlbumId) {
       data = await doAlbum(spotifyAccessToken, spotifyAlbumId);
+    } else if (spotifyArtistId) {
+      data = await doArtist(spotifyAccessToken, spotifyArtistId);
     }
 
+    res.send(JSON.stringify(data));
+  } catch (error) {
+    console.log("errored here", error);
+    res.send(JSON.stringify(error));
+  }
+});
+
+routes.get("/getProducerSongs", async (req, res) => {
+  const geniusProducerId = req.query.geniusProducerId;
+  try {
+    const data = await getSongsByProducers([{id:geniusProducerId}]);
     //filter the primary artist from producer results
-    songsByOtherArtists = data.results.map((producerData) => {
-      const filteredData = producerData.songs.filter(
+      //should only be one result
+      
+      const filteredData = data[0].songs.filter(
         (localSong) =>
-          localSong.primary_artist.id !== data.originalArtistGeniusId
+          localSong.primary_artist.id !== geniusProducerId
       );
-      return {
-        producer: producerData.producer,
+      const songsByOtherArtists =  {
+        producer: data[0].producer,
         songs: filteredData,
       };
-    });
+   
 
     res.send(JSON.stringify(songsByOtherArtists));
   } catch (error) {
