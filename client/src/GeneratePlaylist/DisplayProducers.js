@@ -13,9 +13,10 @@ import {
   CardActionArea,
   CardContent,
   CardMedia,
+  CardHeader,
   CardActions,
   Button,
-  Grid,
+  Grid,AppBar
 } from "@material-ui/core";
 import Skeleton from '@material-ui/lab/Skeleton';
 import LazyLoad from 'react-lazyload';
@@ -31,7 +32,11 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const DisplaySongs = (props) => {
-  const song = props.data[props.index];
+  const song = props.data.songs[props.index];
+  const mapping = props.data.mapping;
+  const searched = mapping.hasOwnProperty(song.id);
+  const noResult = searched&& mapping[song.id].status === 'noResult';
+
   return (
     <ListItem alignItems="flex-start" style={props.style}>
       {/* <ListItemAvatar>
@@ -41,26 +46,27 @@ const DisplaySongs = (props) => {
         primary={song.title_with_featured}
         secondary={song.primary_artist.name}
       />
+     {searched?  (mapping[song.id].status==="Found"? <a href={mapping[song.id].song.external_urls.spotify}>open in spotify</a> :mapping[song.id].status):"no search"}
+      {/* {searched? (noResult ? "No Result":mapping[song.id].status):"searching..."} */}
+      {/* <a href={mapping[song.id].song.external_urls.spotify}>open in spotify</a>       */}
     </ListItem>
   );
 };
 
 
-const DisplayProducer = ({ producerData }) => {
+const DisplayProducer = ({ producerData,geniusToSpotify }) => {
   const classes = useStyles();
-  const [numItemsDisplayed, setNumItemsDisplayed] = useState(2);
+  const [numItemsDisplayed, setNumItemsDisplayed] = useState(10);
   const [sizeCard,setSizeCard] = useState(900);
   const cardRef   = useRef(null);
-  const numItems = 10;
-  const size = 65;
+  const numItems = producerData.length;
+  const size = 65;  
 
   useEffect ( () => {
       if(cardRef.current){
-        console.log("cardRef: ",cardRef)
         setSizeCard(cardRef.current.offsetWidth-20);
       }
   },[cardRef])
-
   const DisplayProducerSongs = ({ producerData, size, height,width }) => {
     return producerData.hasOwnProperty("songs") ? (
       <div className={classes.root}>
@@ -68,8 +74,8 @@ const DisplayProducer = ({ producerData }) => {
           height={height}
           width={width}
           itemSize={size}
-          itemCount={Math.min(10,producerData.songs.length)}
-          itemData={producerData.songs}
+          itemCount={producerData.songs.length}//{Math.min(10,producerData.songs.length)}
+          itemData={{songs:producerData.songs,mapping:geniusToSpotify}}
         >
           {DisplaySongs}
         </FixedSizeList>
@@ -81,19 +87,26 @@ const DisplayProducer = ({ producerData }) => {
 
   return (
     <Card className={classes.root} raised={true} ref={cardRef}>
-      <CardActionArea>
+      
+      
+        
         <CardContent>
           <Typography gutterBottom variant="h5" component="h2">
             {producerData.name}
           </Typography>
+          {/* <Typography variant="subtitle1" component="h2">
+            {producerData.songs.length} Songs
+          </Typography> */}
+          <Divider />
           <DisplayProducerSongs
             producerData={producerData}
             size={size}
             height={numItemsDisplayed* size}
             width={sizeCard}
           />
+          <Divider />
         </CardContent>
-      </CardActionArea>
+      
       <CardActions>
         <Button
           size="small"
@@ -121,7 +134,7 @@ const DisplayProducer = ({ producerData }) => {
   );
 };
 
-function DisplayProducers({ producers }) {
+function DisplayProducers({ producers,geniusToSpotify }) {
   return (
       <div  style={{padding:"1%"}}>
     <Grid
@@ -137,7 +150,7 @@ function DisplayProducers({ producers }) {
             
           <Grid item xs={12} md={6} lg={4} key={element.id} >
               <LazyLoad height={650} once offset={1000}>
-            {producers.length>0 ? <DisplayProducer producerData={element} /> :<Skeleton variant="rect" width={"100%"} height={200} />}
+            {producers.length>0 ? <DisplayProducer producerData={element} geniusToSpotify={geniusToSpotify}/> :<Skeleton variant="rect" width={"100%"} height={200} />}
             </LazyLoad>
           </Grid>
           

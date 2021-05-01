@@ -3,9 +3,12 @@ import React from "react";
 import { Button, Nav, Navbar } from "react-bootstrap";
 import { IndexLinkContainer } from "react-router-bootstrap";
 import { AuthContext } from "./Context/context";
+import { doLogin } from "./Login";
+import { useHistory } from 'react-router-dom';
 // const { Header, Content, Footer } = Layout;
 const Navigation = ({ Logout, spotify }) => {
   const { state, dispatch } = React.useContext(AuthContext);
+  const historyOnPageLoad = useHistory().location;
   return (
     // <Header>
     //   <Menu theme="dark" mode="horizontal" defaultSelectedKeys={["2"]}>
@@ -28,6 +31,17 @@ const Navigation = ({ Logout, spotify }) => {
         <IndexLinkContainer to="/albums"><Nav.Link>{state.isUserAuthenticated ? "user auth" : "user not auth"}</Nav.Link></IndexLinkContainer>
         {/* End debugging */}
         <Button onClick={()=>Logout()}>Logout</Button>
+        <Button
+            onClick={() => {
+              doLogin(
+                historyOnPageLoad,
+                {},
+                dispatch
+              );
+            }}
+          >
+            Please Login to Save
+          </Button>
       </Nav>
     </Navbar>
   );

@@ -1,0 +1,6 @@
+Fix error when going back to generate page
+Save generated data before redirecting to log into spotify
+Update github actions file
+simplify page
+autofill title of playlist
+give option to export each artist to playlist

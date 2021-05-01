@@ -22,10 +22,9 @@ cd ~/
 mv .env spotifyProducers/client/
 cd spotifyProducers/client/
 
-export NODE_OPTIONS=--max_old_space_size=4096
 
 npm install
-npm run build
+npm run memoryBuild
 
 #serve static files with nginx instead
 #pm2 serve build/ 3000 --name "react-spotify-build" --spa
