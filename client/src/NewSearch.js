@@ -9,10 +9,15 @@ import {
   Divider,
   Button,
   Input,
-  Spin
+  Spin,
 } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { Link, useHistory } from "react-router-dom";
+import { TextField } from "@material-ui/core";
+import Paper from "@material-ui/core/Paper";
+import Grid from "@material-ui/core/Grid";
+import { makeStyles } from "@material-ui/core/styles";
+import Container from "@material-ui/core/Container";
 const { Content } = Layout;
 
 const emptyState = {
@@ -21,40 +26,56 @@ const emptyState = {
   artists: [],
 };
 
+const useStyles = makeStyles((theme) => ({
+  root: {
+    flexGrow: 1,
+  },
+  paper: {
+    padding: theme.spacing(2),
+    textAlign: "center",
+    color: theme.palette.text.secondary,
+  },
+  search: {
+    marginTop: "3em",
+  },
+}));
+
 function NewSearch({ spotify }) {
   const [data, setData] = useState(emptyState);
-  const { tracks, albums, artists } =data;
+  const { tracks, albums, artists } = data;
   const [numItems, setNumItems] = useState(5);
-  const [searchTerm,setSearchTerm] = useState("");
-  const [prevSearch,setPrevSearch] = useState(null);
-  const [loading,setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [prevSearch, setPrevSearch] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const history = useHistory();
-  const rowLength = 7;
+  const rowLength = 24;
 
-  const onSearch = (searchTerm)=>{
-    if(prevSearch){
+  const onSearch = (searchTerm) => {
+    if (prevSearch) {
       console.log("aborting prev one");
       prevSearch.abort();
       setPrevSearch(null);
     }
-    if(searchTerm===""){
+    if (searchTerm === "") {
       setData(emptyState);
       setLoading(false);
       return;
     }
-    const search = (spotify.search(searchTerm, ["track", "album", "artist"],{limit:10,market:"NZ"}));
+    const search = spotify.search(searchTerm, ["track", "album", "artist"], {
+      limit: 10,
+      market: "NZ",
+    });
     search.then(
       function (result) {
-        console.log("res:",result)
-        
-        const data = {}
+        console.log("res:", result);
+
+        const data = {};
         //remove any null results
         for (const category of Object.keys(result)) {
-          data[category] = result[category].items.filter((val)=>val!=null)
+          data[category] = result[category].items.filter((val) => val != null);
         }
-       
-        
+
         for (const category of Object.keys(data)) {
           setData((prev) => {
             return { ...prev, [category]: data[category] };
@@ -62,53 +83,84 @@ function NewSearch({ spotify }) {
         }
         setLoading(false);
       },
-      function (err) {
-        
-      }
+      function (err) {}
     );
     setPrevSearch(search);
+  };
+  const classes = useStyles();
 
-  }
   return (
-    <>
-      <Layout className="layout">
-        <Content>
-          <Row>
-            <Col span={24}>
-              <div className="jumbotron" align="center">
-                <Input placeholder="Search" allowClear value={searchTerm} size={700} onChange={(e)=>{setLoading(true);setSearchTerm(e.target.value);onSearch(e.target.value)}}/>
-                
-              </div>
-            </Col>
-          </Row>
-          {loading ? <Row type="flex" justify="center" align="middle" style={{minHeight: '10vh'}}>
-      <Col><Spin size="large" /></Col>
-    
-  </Row>:
-          <>
-          <Row justify="space-around" flex={2}>
-            <DisplayTracks data={data.tracks} numItems={numItems} rowLength={rowLength} history={history}/>
-            <DisplayAlbums data={data.albums} numItems={numItems} rowLength={rowLength} history={history}/>
-            <DisplayArtists data={data.artists} numItems={numItems} rowLength={rowLength} history={history}/>
-          </Row>
-          </>
-        }
-        </Content>
-      </Layout>
-    </>
+    <div className={classes.root}>
+      <Grid container spacing={5}>
+        <Grid item xs={12}>
+          <Container maxWidth="sm" className={classes.search}>
+            <TextField
+              fullWidth
+              center
+              id="outlined-basic"
+              label="Search"
+              variant="outlined"
+              value={searchTerm}
+              onChange={(e) => {
+                setLoading(true);
+                setSearchTerm(e.target.value);
+                onSearch(e.target.value);
+              }}
+            />
+          </Container>
+        </Grid>
+        <Grid item xl={4} lg={4} sm={6} xs={12}>
+          <Container>
+            <DisplayTracks
+              data={data.tracks}
+              numItems={numItems}
+              rowLength={rowLength}
+              history={history}
+            />
+          </Container>
+        </Grid>
+        <Grid item xl={4} lg={4} sm={6} xs={12}>
+          <Container>
+            <DisplayAlbums
+              data={data.albums}
+              numItems={numItems}
+              rowLength={rowLength}
+              history={history}
+            />
+          </Container>
+        </Grid>
+        <Grid item xl={4} lg={4} sm={6} xs={12}>
+          <Container>
+            <DisplayArtists
+              data={data.artists}
+              numItems={numItems}
+              rowLength={rowLength}
+              history={history}
+            />
+          </Container>
+        </Grid>
+      </Grid>
+    </div>
   );
 }
-  //how to lay items out
-function ItemLayout({ data, headerName, getItemData,rowLength,history}) {
+//how to lay items out
+function ItemLayout({ data, headerName, getItemData, rowLength, history }) {
   const renderItem = (item) => {
     const { link, imgArr, name, description, id } = getItemData(item);
     return (
       <Link to={{ pathname: link }}>
         <List.Item
           extra={
-              <Button size="large" type="primary" onClick={(e)=>{e.preventDefault();history.push(`/generate${link}`)}}> 
-                Generate Playlist
-              </Button>       
+            <Button
+              size="large"
+              type="primary"
+              onClick={(e) => {
+                e.preventDefault();
+                history.push(`/generate${link}`);
+              }}
+            >
+              Generate Playlist
+            </Button>
           }
         >
           <List.Item.Meta
@@ -120,11 +172,7 @@ function ItemLayout({ data, headerName, getItemData,rowLength,history}) {
                   src={imgArr[imgArr.length - 1].url}
                 />
               ) : (
-                <Avatar
-                  shape="square"
-                  size={64}
-                  icon={<UserOutlined />}
-                />
+                <Avatar shape="square" size={64} icon={<UserOutlined />} />
               )
             }
             title={name}
@@ -133,16 +181,14 @@ function ItemLayout({ data, headerName, getItemData,rowLength,history}) {
         </List.Item>
       </Link>
     );
-          }
+  };
 
   return (
-    <Col  lg={rowLength}>
+    <Col lg={rowLength}>
       <List
         loading={false}
         size="large"
-        header={
-          <h4>{headerName}</h4>
-        }
+        header={<h4>{headerName}</h4>}
         bordered={false}
         // itemLayout="horizontal"
         dataSource={data}
@@ -152,7 +198,7 @@ function ItemLayout({ data, headerName, getItemData,rowLength,history}) {
   );
 }
 
-function DisplayTracks({data,numItems,rowLength,history}){
+function DisplayTracks({ data, numItems, rowLength, history }) {
   const trackData = (track) => {
     return {
       link: `/track/${track.id}`,
@@ -163,17 +209,18 @@ function DisplayTracks({data,numItems,rowLength,history}){
     };
   };
 
-  return <ItemLayout
-  data={data.slice(0, numItems)}
-  headerName="Songs"
-  getItemData={trackData}
-  rowLength={rowLength}
-  history={history}
-/>
+  return (
+    <ItemLayout
+      data={data.slice(0, numItems)}
+      headerName="Songs"
+      getItemData={trackData}
+      rowLength={rowLength}
+      history={history}
+    />
+  );
 }
 
-
-function DisplayAlbums({data,numItems,rowLength,history}){
+function DisplayAlbums({ data, numItems, rowLength, history }) {
   const albumData = (album) => {
     return {
       link: `/album/${album.id}`,
@@ -184,18 +231,18 @@ function DisplayAlbums({data,numItems,rowLength,history}){
     };
   };
 
-  return <ItemLayout
-  data={data.slice(0, numItems)}
-  headerName="Albums"
-  getItemData={albumData}
-  rowLength={rowLength}
-  history={history}
-/>
+  return (
+    <ItemLayout
+      data={data.slice(0, numItems)}
+      headerName="Albums"
+      getItemData={albumData}
+      rowLength={rowLength}
+      history={history}
+    />
+  );
 }
 
-
-function DisplayArtists({data,numItems,rowLength,history}){
-  
+function DisplayArtists({ data, numItems, rowLength, history }) {
   const artistData = (artist) => {
     return {
       link: `/artist/${artist.id}`,
@@ -206,13 +253,15 @@ function DisplayArtists({data,numItems,rowLength,history}){
     };
   };
 
-  return <ItemLayout
-  data={data.slice(0, numItems)}
-  headerName="Artists"
-  getItemData={artistData}
-  rowLength={rowLength}
-  history={history}
-/>
+  return (
+    <ItemLayout
+      data={data.slice(0, numItems)}
+      headerName="Artists"
+      getItemData={artistData}
+      rowLength={rowLength}
+      history={history}
+    />
+  );
 }
 
 export default NewSearch;

@@ -31,7 +31,11 @@ function App() {
 
   const refreshToken = () => {
     //need to refresh token
-    if (state.refreshToken) {
+    if(state.refreshToken){
+      console.log("state.refresh token exists?")
+    }
+    if (state.refreshToken!==null && typeof(state.refreshToken)!=='undefined' && state.refreshToken.length>0) {
+      console.log("does exist")
       //refresh current user
       doRefresh(dispatch, state.refreshToken);
     } else {

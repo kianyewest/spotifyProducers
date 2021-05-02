@@ -97,7 +97,7 @@ function DisplayPlaylist({ songs, geniusToSpotify }) {
              
            
               <TableCell align="right">
-                {found && <a href={geniusToSpotify[song.id].song.external_urls.spotify}>open in spotify</a>}
+                {found ? <a href={geniusToSpotify[song.id].song.external_urls.spotify}>open in spotify</a>:"not Found"}
               </TableCell>
             </TableRow>
           )})}

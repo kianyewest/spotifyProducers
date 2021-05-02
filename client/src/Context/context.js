@@ -33,7 +33,13 @@ const reducer = (state, action) => {
           };
         }
     case "LOAD_LOGIN":{
+      
         const { accessToken, refreshToken,expiryTime} = action.payload;
+        if(expiryTime===null){
+          console.error("expiryTime is null in LOAD_LOGIN!",expiryTime)
+          }else{
+            console.log("expiry time is not null is load login")
+          }
         const userIsAuthenticated = (typeof refreshToken !== 'undefined' && refreshToken !== null);
         return {
             ...state,
@@ -50,7 +56,9 @@ const reducer = (state, action) => {
         const accessToken = action.payload.access_token;
         const expires_in = action.payload.expires_in;
         const expiryTime = Date.now() + parseInt(expires_in)*1000; // time in seconds since epoch
-        
+        if(expiryTime===null){
+          console.error("expiryTime is null in DEFAULT_LOGIN!",expiryTime)
+          }
         localStorage.setItem("DEFAULT_LOGIN", JSON.stringify({accessToken,expiryTime}));
         console.log("DEFAULT LOGIN CALLED: stae val: ",state)
         return {
@@ -66,7 +74,9 @@ const reducer = (state, action) => {
         const expires_in = action.payload.expires_in;
         const expiryTime = Date.now() + parseInt(expires_in)*1000; // time in seconds since epoch
         const refreshToken = action.payload.refresh_token;
-        
+        if(expiryTime===null){
+          console.error("expiryTime is null in REFRESH!",expiryTime)
+        }
         localStorage.setItem("USER_LOGIN", JSON.stringify({ accessToken, refreshToken,expiryTime}));
 
         return {
