@@ -76,14 +76,9 @@ const getSpotifyTrackFromGeniusTrack = async (
   const query = geniusTrack.title + " " + geniusTrack.primary_artist.name;
   //check entry does not already exist
   if (geniusToSpotify.hasOwnProperty(geniusTrack.id)) {
-    console.log("already searched for: ", query);
     return;
-  } else {
-    // console.log("searching for: ", query);
   }
 
-  // console.log("geniusTrack", geniusTrack);
-  // const q = String.raw();
   const cleanQuery = query.normalize("NFKD").replace("’", "'");
 
   try {

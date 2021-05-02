@@ -2,17 +2,33 @@ import React, { useEffect, useState } from "react";
 import DisplayProducers from "./DisplayProducers";
 import { useRouteMatch } from "react-router-dom";
 import { AuthContext } from "../Context/context";
-import useGeniusToSpotify from "./useGeniusToSpotify";
+import useGeniusToSpotify, {
+  searchText,
+  foundText,
+} from "./useGeniusToSpotify";
 import DisplayPlaylist from "./DisplayPlaylist";
 
+import SpotifyWebApi from "spotify-web-api-js";
+import DisplayOptions from "./DisplayOptions";
+
 function DisplayResults() {
+  const totalRequests = 20;
   const { state, dispatch } = React.useContext(AuthContext);
   const [producers, setProducers] = useState([]);
   const [playlistSongs, setPlaylistSongs] = useState([]);
+  const [playlistInfo, setPlaylistInfo] = useState({
+    creating: false,
+    name: "",
+    id: null,
+    displayDialog: false,
+  });
   const match = useRouteMatch();
   const [geniusToSpotify, setSongsToFind] = useGeniusToSpotify(
     state.accessToken
   );
+
+  const spotify = new SpotifyWebApi();
+  spotify.setAccessToken(state.accessToken);
 
   const type = (val) => {
     switch (val) {
@@ -26,8 +42,8 @@ function DisplayResults() {
         return "ERROR";
     }
   };
+
   useEffect(() => {
-    //loading from local storage is just for development
     fetch(
       process.env.REACT_APP_BACKEND_LINK +
         "api/getProducers?" +
@@ -40,7 +56,7 @@ function DisplayResults() {
       .then((data) => {
         setProducers(data.producers);
         const numberProducers = data.producers.length;
-        const totalRequests = 20;
+
         const songPerProducer = Math.round(totalRequests / numberProducers);
         data.producers.forEach((localProducer) => {
           fetch(
@@ -75,8 +91,12 @@ function DisplayResults() {
               setProducers([...data.producers]);
               setPlaylistSongs((prev) => {
                 const names = new Set();
-                prev.forEach(song=>names.add(song.id));
-                const uniqueSongs = songs.slice(0, songPerProducer).filter(song => !names.has(song.id) ? names.add(song.id) : false);
+                prev.forEach((song) => names.add(song.id));
+                const uniqueSongs = songs
+                  .slice(0, songPerProducer)
+                  .filter((song) =>
+                    !names.has(song.id) ? names.add(song.id) : false
+                  );
                 return [...prev, ...uniqueSongs];
               });
             });
@@ -91,8 +111,73 @@ function DisplayResults() {
       });
   }, []);
 
-  return producers ? (
+  const spotifyLinksNotLoaded = playlistSongs.filter(
+    (song) =>
+      geniusToSpotify.hasOwnProperty(song.id) &&
+      geniusToSpotify[song.id].status === searchText
+  );
+
+  const createPlaylist = async () => {
+    setPlaylistInfo((prev) => {
+      return { ...prev, creating: true };
+    });
+    const uris = playlistSongs.flatMap((song) => {
+      if (
+        geniusToSpotify.hasOwnProperty(song.id) &&
+        geniusToSpotify[song.id].status === foundText
+      ) {
+        return [geniusToSpotify[song.id].song.uri];
+      } else {
+        return [];
+      }
+    });
+    try {
+      const me = await spotify.getMe();
+      const result = spotify.createPlaylist(me.id, {
+        name: playlistInfo.name ? playlistInfo.name : "Generated Playlist",
+      });
+      result.then(
+        (playlistData) => {
+          const playlistId = playlistData.id;
+          spotify.addTracksToPlaylist(playlistId, uris).then(
+            (data) => {
+              setPlaylistInfo((prev) => {
+                return {
+                  ...prev,
+                  id: playlistData,
+                  displayDialog: true,
+                  creating: false,
+                };
+              });
+            },
+            (error) => console.log(error)
+          );
+        },
+        (error) => console.log(error)
+      );
+    } catch (error) {
+      console.log("e", error);
+    }
+  };
+
+  return (
     <>
+      <DisplayOptions
+        playlistInfo={playlistInfo}
+        setPlaylistInfo={setPlaylistInfo}
+        createPlaylist={createPlaylist}
+        percentageLoaded={
+          playlistSongs.length === 0
+            ? 0
+            : ((playlistSongs.length - spotifyLinksNotLoaded.length) /
+                (Math.round(totalRequests / producers.length) *
+                  producers.length)) *
+              100
+
+        }
+        state={state}
+        dispatch={dispatch}
+      />
       <DisplayPlaylist
         songs={playlistSongs}
         geniusToSpotify={geniusToSpotify}
@@ -102,8 +187,6 @@ function DisplayResults() {
         geniusToSpotify={geniusToSpotify}
       />
     </>
-  ) : (
-    <h1>Loading</h1>
   );
 }
 

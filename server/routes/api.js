@@ -196,7 +196,7 @@ const doTrack = async (spotifyAccessToken, spotifyTrackId) => {
   spotifyApi.setAccessToken(spotifyAccessToken);
 
   //get Track from spotify
-  const spotifyData = await spotifyApi.getTrack(spotifyTrackId);
+  const spotifyData = await spotifyApi.getTrack(spotifyTrackId,{market:"NZ"});
   //search genius for found track
   geniusData = await searchGenius(
     spotifyData.body.name,
@@ -252,7 +252,7 @@ const doAlbum = async (spotifyAccessToken, spotifyAlbumId) => {
   spotifyApi.setAccessToken(spotifyAccessToken);
 
   //get Track from spotify
-  const spotifyData = await spotifyApi.getAlbum(spotifyAlbumId);
+  const spotifyData = await spotifyApi.getAlbum(spotifyAlbumId,{market:"NZ"});
   const firstTrackName = spotifyData.body.tracks.items[0].name;
   const artistName = spotifyData.body.artists[0].name;
   const data = await getProducersOfAlbumFromTrack(
@@ -274,7 +274,7 @@ const doArtist = async (spotifyAccessToken, spotifyArtistId) => {
   
   
   const albumsPromise = spotifyData.body.items.map(async (album) => {
-    return spotifyApi.getAlbum(album.id);
+    return spotifyApi.getAlbum(album.id,{market:"NZ"});
   });
 
   const uniqueFirstTrack = new Map();
