@@ -3,10 +3,12 @@ import DisplayProducers from "./DisplayProducers";
 import { useRouteMatch } from "react-router-dom";
 import { AuthContext } from "../Context/context";
 import useGeniusToSpotify from "./useGeniusToSpotify";
+import DisplayPlaylist from "./DisplayPlaylist";
 
 function DisplayResults() {
   const { state, dispatch } = React.useContext(AuthContext);
   const [producers, setProducers] = useState([]);
+  const [playlistSongs, setPlaylistSongs] = useState([]);
   const match = useRouteMatch();
   const [geniusToSpotify, setSongsToFind] = useGeniusToSpotify(
     state.accessToken
@@ -39,7 +41,7 @@ function DisplayResults() {
         setProducers(data.producers);
         const numberProducers = data.producers.length;
         const totalRequests = 20;
-        const songPerProducer = Math.round(totalRequests/numberProducers);
+        const songPerProducer = Math.round(totalRequests / numberProducers);
         data.producers.forEach((localProducer) => {
           fetch(
             process.env.REACT_APP_BACKEND_LINK +
@@ -50,7 +52,6 @@ function DisplayResults() {
           )
             .then((res) => res.json())
             .then((result) => {
-              console.log("got a result:", result);
               if (result === null) {
                 console.log("result was null", result);
                 return;
@@ -59,20 +60,23 @@ function DisplayResults() {
                 console.log("result.songs was null", result);
                 return;
               }
-              // console.log("returned: ", producers, result);
               //remove null or any empty songs
               const songs = result.songs.filter(Boolean);
-              songs.sort((songA,songB)=>{return songA.stats.pageviews>songB.stats.pageviews ? -1:1})
-              
-              
+              songs.sort((songA, songB) => {
+                return songA.stats.pageviews > songB.stats.pageviews ? -1 : 1;
+              });
+
               if (songs.length !== result.songs.length) {
                 console.log("removed: ", result.songs, songs);
               }
-              setSongsToFind(songs.slice(0,songPerProducer));
-
+              setSongsToFind(songs.slice(0, songPerProducer));
 
               localProducer.songs = songs;
               setProducers([...data.producers]);
+              setPlaylistSongs((prev) => [
+                ...prev,
+                ...songs.slice(0, songPerProducer),
+              ]);
             });
         });
       })
@@ -87,7 +91,14 @@ function DisplayResults() {
 
   return producers ? (
     <>
-    <DisplayProducers producers={producers} geniusToSpotify={geniusToSpotify}/>
+      <DisplayPlaylist
+        songs={playlistSongs}
+        geniusToSpotify={geniusToSpotify}
+      />
+      <DisplayProducers
+        producers={producers}
+        geniusToSpotify={geniusToSpotify}
+      />
     </>
   ) : (
     <h1>Loading</h1>
