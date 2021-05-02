@@ -96,7 +96,6 @@ function NewSearch({ spotify }) {
           <Container maxWidth="sm" className={classes.search}>
             <TextField
               fullWidth
-              center
               id="outlined-basic"
               label="Search"
               variant="outlined"

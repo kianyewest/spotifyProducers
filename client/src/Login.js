@@ -1,6 +1,7 @@
 import React from "react";
 import { Spin,Row,Col } from 'antd';
 import "./Login.css";
+import { ConsoleSqlOutlined } from "@ant-design/icons";
 
 export const doLoginWithUrl = (dispatch)=>{
   const queryString = window.location.search;
