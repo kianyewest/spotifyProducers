@@ -46,15 +46,18 @@ const processResults = (data, geniusTrack, setGeniusToSpotify) => {
     const topSong = sameArtist[0];
 
     setGeniusToSpotify((prev) => {
-      return { ...prev, [geniusTrack.id]: {status:"Found",song:topSong} };
+      return {
+        ...prev,
+        [geniusTrack.id]: { status: foundText, song: topSong },
+      };
     });
     // setSpotifyToGenius((prev) => {
     //   return { ...prev, [topSong.id]: geniusTrack };
     // });
     return true;
   } else {
-    const noResultObj = { status: "NoResult" };
-   
+    const noResultObj = { status: noResultText };
+
     setGeniusToSpotify((prev) => {
       return { ...prev, [geniusTrack.id]: noResultObj };
     });
@@ -83,42 +86,42 @@ const getSpotifyTrackFromGeniusTrack = async (
   // const q = String.raw();
   const cleanQuery = query.normalize("NFKD").replace("’", "'");
 
-  try{
-  //this is ugly, it searches for the track with artist name, if that fails then
-  //searches with a higher limit i.e return more tracks
-  // if that fails it searches only using the title
-  //if that fails it reduces the title to a bare form and searches again
-  const data = await spotify.search(cleanQuery, ["track"], { limit: 10 });
-  if (processResults(data, geniusTrack, setGeniusToSpotify)) {
-    return;
-  }
-  const data1 = await spotify.search(query, ["track"], { limit: 50 });
-  if (processResults(data1, geniusTrack, setGeniusToSpotify)) {
-    return;
-  }
-  const data2 = await spotify.search(geniusTrack.title, ["track"], {
-    limit: 50,
-  });
+  try {
+    //this is ugly, it searches for the track with artist name, if that fails then
+    //searches with a higher limit i.e return more tracks
+    // if that fails it searches only using the title
+    //if that fails it reduces the title to a bare form and searches again
+    const data = await spotify.search(cleanQuery, ["track"], { limit: 10 });
+    if (processResults(data, geniusTrack, setGeniusToSpotify)) {
+      return;
+    }
+    const data1 = await spotify.search(query, ["track"], { limit: 50 });
+    if (processResults(data1, geniusTrack, setGeniusToSpotify)) {
+      return;
+    }
+    const data2 = await spotify.search(geniusTrack.title, ["track"], {
+      limit: 50,
+    });
 
-  //if that failed modify the search term
-  if (processResults(data2, geniusTrack, setGeniusToSpotify)) {
-    return;
-  }
-  // console.log("oringal q: ", query);
-  //removes text between brackets i.e "Speedom (Worldwide Choppers 2)" becomes "Speedom"
-  //this was done as spotify represented Worldwide Choppers 2 as Wc2, and the song title for it was Speedom (Wc2) which was not found when searching
-  const regex = /\(([^HS]{1,})\)/gm;
-  const newQuery = geniusTrack.title.replace(regex, "");
-  // console.log("newQuery", newQuery);
-  const data3 = await spotify.search(newQuery, ["track"], { limit: 50 })
-  processResults(data3, geniusTrack, setGeniusToSpotify);
-  }catch(err){
-    console.log("errored when searching :(",err)
-    if(err.status===429){
+    //if that failed modify the search term
+    if (processResults(data2, geniusTrack, setGeniusToSpotify)) {
+      return;
+    }
+    // console.log("oringal q: ", query);
+    //removes text between brackets i.e "Speedom (Worldwide Choppers 2)" becomes "Speedom"
+    //this was done as spotify represented Worldwide Choppers 2 as Wc2, and the song title for it was Speedom (Wc2) which was not found when searching
+    const regex = /\(([^HS]{1,})\)/gm;
+    const newQuery = geniusTrack.title.replace(regex, "");
+    // console.log("newQuery", newQuery);
+    const data3 = await spotify.search(newQuery, ["track"], { limit: 50 });
+    processResults(data3, geniusTrack, setGeniusToSpotify);
+  } catch (err) {
+    console.log("errored when searching :(", err);
+    if (err.status === 429) {
       //hit rate limit
       //setTimeout()
       setGeniusToSpotify((prev) => {
-        return { ...prev, [geniusTrack.id]: {status:"Timeout"} };
+        return { ...prev, [geniusTrack.id]: { status: timeoutText } };
       });
     }
   }
@@ -132,15 +135,16 @@ const useGeniusToSpotify = (spotifyAccessToken) => {
   spotify.setAccessToken(spotifyAccessToken);
   useEffect(() => {
     setGeniusToSpotify((prev) => {
-      songsToFind.forEach((geniusTrack)=>{
-        prev[[geniusTrack.id]] = {status:"Searching"}
-      })
-      
+      songsToFind.forEach((geniusTrack) => {
+        if (!geniusToSpotify.hasOwnProperty(geniusTrack.id)) {
+          prev[[geniusTrack.id]] = { status: searchText };
+        }
+      });
 
-      return { ...prev}
+      return { ...prev };
     });
+
     songsToFind.forEach((song) => {
-      
       getSpotifyTrackFromGeniusTrack(
         song,
         geniusToSpotify,
@@ -152,4 +156,8 @@ const useGeniusToSpotify = (spotifyAccessToken) => {
   return [geniusToSpotify, setSongsToFind];
 };
 
+export const foundText = "Found";
+export const searchText = "Searching";
+export const noResultText = "noResult";
+export const timeoutText = "Timeout";
 export default useGeniusToSpotify;
