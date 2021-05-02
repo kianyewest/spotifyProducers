@@ -19,7 +19,7 @@ function ViewTrack({ spotify }) {
         const spotifyArtistName = data.artists[0].name;
         const spotifyAlbumName = data.album.name;
         const spotifyTrackName = data.name;
-        console.log('process.env.BACKEND_LINK: ',process.env.BACKEND_LINK)
+        console.log('process.env.BACKEND_LINK: ',process.env.REACT_APP_BACKEND_LINK)
         fetch(
           process.env.REACT_APP_BACKEND_LINK+"api/search?" +
             new URLSearchParams({
