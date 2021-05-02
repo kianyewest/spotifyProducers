@@ -73,10 +73,12 @@ function DisplayResults() {
 
               localProducer.songs = songs;
               setProducers([...data.producers]);
-              setPlaylistSongs((prev) => [
-                ...prev,
-                ...songs.slice(0, songPerProducer),
-              ]);
+              setPlaylistSongs((prev) => {
+                const names = new Set();
+                prev.forEach(song=>names.add(song.id));
+                const uniqueSongs = songs.slice(0, songPerProducer).filter(song => !names.has(song.id) ? names.add(song.id) : false);
+                return [...prev, ...uniqueSongs];
+              });
             });
         });
       })
