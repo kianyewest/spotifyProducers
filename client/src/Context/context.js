@@ -112,10 +112,10 @@ const reducer = (state, action) => {
       };
     }
     case "NETWORK_ERROR": {
-      console.log("recorded network error :(");
       return {
         ...state,
         unableToReachBackend: true,
+        networkError:action.payload,
       };
     }
     default:

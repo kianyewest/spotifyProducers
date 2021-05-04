@@ -135,7 +135,7 @@ function App() {
   return (
     <>
       {state.unableToReachBackend ? (
-        <Result status="warning" title="Unable to contact backend server" />
+        <Result status="warning" title={`Unable to contact backend server: `} subTitle={`${JSON.stringify(state.networkError)}`} />
       ) : (
         <>
           {navBar}

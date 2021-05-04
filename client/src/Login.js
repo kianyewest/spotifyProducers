@@ -28,7 +28,7 @@ export const loginWithoutUser = (dispatch)=>{
     data=>{
       console.log("reahed server")
       dispatch({type:"DEFAULT_LOGIN",payload:data});
-    }).catch(err=>{dispatch({type:"NETWORK_ERROR",payload:err})})
+    }).catch(err=>{dispatch({type:"NETWORK_ERROR",payload:{err:err.toString(),origin:"from: loginWithoutUser"}})})
 }
 
 export const loadLogin = (dispatch)=>{
@@ -61,7 +61,7 @@ export const doLogin = (history,data,dispatch)=>{
 export const checkAPI = (dispatch)=>{
   fetchWithTimeout(
     process.env.REACT_APP_BACKEND_LINK,{timeout:10000}
-  ).then((res) => console.log("got response from server: ",res)).catch(err=>{dispatch({type:"NETWORK_ERROR",payload:err})})
+  ).then((res) => console.log("got response from server: ",res)).catch(err=>{dispatch({type:"NETWORK_ERROR",payload:{err:err.toString(),origin:"from: check api"}})})
 }
 
 export const doLogOut = (dispatch)=>{
@@ -79,7 +79,7 @@ export const doRefresh = (dispatch, refreshToken)=>{
     .then((res) => res.json())
     .then((data) => {
       dispatch({type:"REFRESH",payload:data})
-    }).catch(err=>dispatch({type:"NETWORK_ERROR",payload:err}))
+    }).catch(err=>{dispatch({type:"NETWORK_ERROR",payload:{err:err.toString(),origin:"from: doRefresh"}})})
 }
 
 //https://dmitripavlutin.com/timeout-fetch-request/
