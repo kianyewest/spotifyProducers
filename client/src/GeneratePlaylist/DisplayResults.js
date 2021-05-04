@@ -14,6 +14,7 @@ import DisplayOptions from "./DisplayOptions";
 function DisplayResults() {
   const totalRequests = 20;
   const { state, dispatch } = React.useContext(AuthContext);
+  const [producersGotten, setProducersGotten] = useState(0);
   const [producers, setProducers] = useState([]);
   const [playlistSongs, setPlaylistSongs] = useState([]);
   const [playlistInfo, setPlaylistInfo] = useState({
@@ -68,6 +69,7 @@ function DisplayResults() {
           )
             .then((res) => res.json())
             .then((result) => {
+              setProducersGotten((prev) => prev + 1);
               if (result === null) {
                 console.log("result was null", result);
                 return;
@@ -82,13 +84,12 @@ function DisplayResults() {
                 return songA.stats.pageviews > songB.stats.pageviews ? -1 : 1;
               });
 
-              if (songs.length !== result.songs.length) {
-                console.log("removed: ", result.songs, songs);
-              }
               setSongsToFind(songs.slice(0, songPerProducer));
 
+              //update local variable and set
               localProducer.songs = songs;
               setProducers([...data.producers]);
+
               setPlaylistSongs((prev) => {
                 const names = new Set();
                 prev.forEach((song) => names.add(song.id));
@@ -110,6 +111,11 @@ function DisplayResults() {
         );
       });
   }, []);
+
+  useEffect(() => {
+    if (producersGotten === producers.length) {
+    }
+  }, [producersGotten]);
 
   const spotifyLinksNotLoaded = playlistSongs.filter(
     (song) =>
@@ -159,22 +165,22 @@ function DisplayResults() {
       console.log("e", error);
     }
   };
-
+  const loadedProducersSongs = producersGotten === producers.length;
+  const estimatedNumSongs =
+    Math.round(totalRequests / producers.length) * producers.length;
+  const percentage =
+    playlistSongs.length === 0
+      ? 0
+      : ((playlistSongs.length - spotifyLinksNotLoaded.length) /
+          (loadedProducersSongs ? playlistSongs.length : estimatedNumSongs)) *
+        100;
   return (
     <>
       <DisplayOptions
         playlistInfo={playlistInfo}
         setPlaylistInfo={setPlaylistInfo}
         createPlaylist={createPlaylist}
-        percentageLoaded={
-          playlistSongs.length === 0
-            ? 0
-            : ((playlistSongs.length - spotifyLinksNotLoaded.length) /
-                (Math.round(totalRequests / producers.length) *
-                  producers.length)) *
-              100
-
-        }
+        percentageLoaded={percentage}
         state={state}
         dispatch={dispatch}
       />

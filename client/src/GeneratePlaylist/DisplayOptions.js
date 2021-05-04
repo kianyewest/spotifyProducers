@@ -4,8 +4,11 @@ import { green } from "@material-ui/core/colors";
 import { Button, Dialog, DialogTitle, TextField } from "@material-ui/core";
 
 import CircularProgress from "@material-ui/core/CircularProgress";
-import { useHistory } from 'react-router-dom';
+import { useHistory } from "react-router-dom";
 import { doLogin } from "../Login";
+import Typography from '@material-ui/core/Typography';
+import CircularProgressWithLabel from '../Util';
+
 const useStyles = makeStyles((theme) => ({
   root: {
     display: "flex",
@@ -31,7 +34,7 @@ function DisplayOptions({
   createPlaylist,
   percentageLoaded,
   state,
-  dispatch
+  dispatch,
 }) {
   const classes = useStyles();
 
@@ -89,26 +92,31 @@ function DisplayOptions({
             )}
           </div>
           {percentageLoaded < 100 && (
-            <CircularProgress variant="determinate" value={percentageLoaded} />
+            <CircularProgressWithLabel
+              variant="determinate"
+              value={percentageLoaded}
+              children={ <Typography
+                variant="caption"
+                component="div"
+                color="textSecondary"
+              >{`${Math.round(percentageLoaded)}%`}</Typography>}
+            />
           )}
         </>
       ) : (
         <Button
-        variant="contained"
-              color="primary"
-            onClick={() => {
-              doLogin(
-                historyOnPageLoad,
-                {},
-                dispatch
-              );
-            }}
-          >
-            Please Login to Save
-          </Button>
+          variant="contained"
+          color="primary"
+          onClick={() => {
+            doLogin(historyOnPageLoad, {}, dispatch);
+          }}
+        >
+          Please Login to Save
+        </Button>
       )}
     </div>
   );
 }
+
 
 export default DisplayOptions;

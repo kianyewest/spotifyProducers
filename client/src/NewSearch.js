@@ -18,6 +18,8 @@ import Paper from "@material-ui/core/Paper";
 import Grid from "@material-ui/core/Grid";
 import { makeStyles } from "@material-ui/core/styles";
 import Container from "@material-ui/core/Container";
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Box from '@material-ui/core/Box';
 const { Content } = Layout;
 
 const emptyState = {
@@ -31,7 +33,7 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
   },
   paper: {
-    padding: theme.spacing(2),
+    // padding: theme.spacing(2),
     textAlign: "center",
     color: theme.palette.text.secondary,
   },
@@ -108,6 +110,8 @@ function NewSearch({ spotify }) {
             />
           </Container>
         </Grid>
+        {loading ? <Grid container alignContent="center" justify="center"> 
+       <CircularProgress /></Grid>:(<>
         <Grid item xl={4} lg={4} sm={6} xs={12}>
           <Container>
             <DisplayTracks
@@ -138,6 +142,7 @@ function NewSearch({ spotify }) {
             />
           </Container>
         </Grid>
+       </> )}
       </Grid>
     </div>
   );
@@ -183,7 +188,7 @@ function ItemLayout({ data, headerName, getItemData, rowLength, history }) {
   };
 
   return (
-    <Col lg={rowLength}>
+    <Col >
       <List
         loading={false}
         size="large"
