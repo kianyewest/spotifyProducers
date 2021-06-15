@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import DisplayProducers from "./DisplayProducers";
-import { useRouteMatch } from "react-router-dom";
+import { useRouteMatch,useHistory } from "react-router-dom";
 import { AuthContext } from "../Context/context";
 import useGeniusToSpotify, {
   searchText,
@@ -11,12 +11,15 @@ import DisplayPlaylist from "./DisplayPlaylist";
 import SpotifyWebApi from "spotify-web-api-js";
 import DisplayOptions from "./DisplayOptions";
 
+import { Button, Dialog, DialogTitle } from "@material-ui/core";
+
 function DisplayResults() {
   const totalRequests = 20;
   const { state, dispatch } = React.useContext(AuthContext);
   const [producersGotten, setProducersGotten] = useState(0);
   const [producers, setProducers] = useState([]);
   const [playlistSongs, setPlaylistSongs] = useState([]);
+  const [noResult,setNoResult] = useState(false);
   const [playlistInfo, setPlaylistInfo] = useState({
     creating: false,
     name: "",
@@ -28,6 +31,7 @@ function DisplayResults() {
     state.accessToken
   );
 
+  const history = useHistory();
   const spotify = new SpotifyWebApi();
   spotify.setAccessToken(state.accessToken);
 
@@ -55,6 +59,13 @@ function DisplayResults() {
     )
       .then((res) => res.json())
       .then((data) => {
+        if(data.noResult){
+          setProducers([]);
+          setProducersGotten(0);
+          setNoResult(true);
+          return;
+        }
+        console.log("setting producers to .producers fo this:",data)
         setProducers(data.producers);
         const numberProducers = data.producers.length;
 
@@ -165,6 +176,7 @@ function DisplayResults() {
       console.log("e", error);
     }
   };
+
   const loadedProducersSongs = producersGotten === producers.length;
   const estimatedNumSongs =
     Math.round(totalRequests / producers.length) * producers.length;
@@ -175,7 +187,9 @@ function DisplayResults() {
           (loadedProducersSongs ? playlistSongs.length : estimatedNumSongs)) *
         100;
   return (
-    <>
+    
+      <>
+      <Modal noResult={noResult} history={history}/>
       <DisplayOptions
         playlistInfo={playlistInfo}
         setPlaylistInfo={setPlaylistInfo}
@@ -191,9 +205,28 @@ function DisplayResults() {
       <DisplayProducers
         producers={producers}
         geniusToSpotify={geniusToSpotify}
-      />
-    </>
+      /> </>
+
+   
   );
 }
+
+const Modal = ({noResult,history}) => {
+  return (
+    <Dialog
+      aria-labelledby="simple-dialog-title"
+      open={noResult}
+    >
+      <DialogTitle id="simple-dialog-title">No Results found :(</DialogTitle>
+      <Button
+      onClick={(e) => {
+                      e.preventDefault();
+                      history.goBack();
+                    }}>
+           Return           
+      </Button>
+    </Dialog>
+  );
+};
 
 export default DisplayResults;

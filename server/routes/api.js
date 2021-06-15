@@ -202,6 +202,10 @@ const doTrack = async (spotifyAccessToken, spotifyTrackId) => {
     spotifyData.body.name,
     spotifyData.body.artists[0].name
   );
+  if(geniusData.noResult){
+    return geniusData;
+  }
+  
   const trackId = geniusData.result[0].result.id;
 
   //get producers
@@ -259,6 +263,9 @@ const doAlbum = async (spotifyAccessToken, spotifyAlbumId) => {
     firstTrackName,
     artistName
   );
+  if(data.noResult){
+    return data;
+  }
   
   // const songs = await getSongsByProducers(producers);
   return {
